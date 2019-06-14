@@ -6,7 +6,12 @@ import application.Flight;
 import utils.TestDataGenerator;
 
 import java.sql.*;
-import java.time.*;
+import java.time.OffsetDateTime;
+import java.time.ZoneOffset;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.logging.Logger;
+
 
 public class DbManager {
 
@@ -14,13 +19,7 @@ public class DbManager {
     private final String user = "postgres";
     private final String password = "postgres";
     private Connection connection = null;
-
-
-    private String sqlCountry = "insert into slotmachine.country (country_name) values (?);";
-    private String sqlCity = "insert into slotmachine.city (city_name, country, timezoneregion) values (?, ?, ?);";
-    private String sqlAirline = "insert into slotmachine.airline (airline_name, airline_alias, airline_country) values (?, ?, ?);";
-    private String sqlAirport = "insert into slotmachine.airport (airport_name, airport_alias, airport_city, airport_country) values (?, ?, ?, ?);";
-    private String sqlFlight = "insert into slotmachine.flight (departureAirport, destinationAirport, airline, departureTime, destinationTime) values (?,?,?,?,?);";
+    private static final Logger LOGGER = Logger.getLogger("SlotMachine");
 
 
     public DbManager() {
@@ -33,8 +32,7 @@ public class DbManager {
         try {
             conn = DriverManager.getConnection(url, user, password);
             System.out.println("Connected to the PostgreSQL server successfully.");
-        } catch (SQLException e) {
-            System.out.println(e.getMessage());
+        } catch (SQLException ignore) {
         }
 
         return conn;
@@ -46,22 +44,54 @@ public class DbManager {
             connection.close();
             System.out.println("Disconnected");
             return true;
-        } catch (SQLException e) {
-            e.printStackTrace();
+        } catch (SQLException ignore) {
         }
         return false;
 
     }
 
-    public boolean populate(Airport departureAirport) {
-        return false;
+
+    public void addAirline(Airline airline) {
+        assert airline != null;
+    }
+
+    public void addAirport(Airport airport) {
+        assert airport != null;
+        populateCountry(airport.getCountry());
+        populateCity(airport.getCountry(), airport.getCity(), airport.getUtcOffset());
+        populateAirport(airport.getName(), airport.getAlias(), airport.getCity(), airport.getCountry());
 
     }
 
-    public boolean populateCountry(String country) throws SQLException {
+    public void addFlight(Flight flight) {
+        assert flight != null;
+        Airline airline = flight.getAirline();
+        Airport departureAirport = flight.getDepartureAirport();
+        Airport destinationAirport = flight.getDestinationAirport();
+        OffsetDateTime departureDate = flight.getDepartureTime();
+        OffsetDateTime destinationDate = flight.getDestinationTime();
+
+        populateCountry(airline.getCountry());
+        populateCountry(destinationAirport.getCountry());
+
+        populateCity(destinationAirport.getCountry(), destinationAirport.getCity(), destinationAirport.getUtcOffset());
+        populateAirport(destinationAirport.getName(), destinationAirport.getAlias(), destinationAirport.getCity(), destinationAirport.getCountry());
+        populateAirline(airline.getName(), airline.getAlias(), airline.getCountry());
+
+        //Timestamp can't keep Timezone --> convert to UTC
+        Timestamp departure = Timestamp.from(departureDate.toInstant());
+        Timestamp destination = Timestamp.from(destinationDate.toInstant());
+
+        populateFlight(departureAirport.getAlias(), destinationAirport.getAlias(), airline.getAlias(), departure, destination);
+
+    }
+
+
+    private boolean populateCountry(String country) {
         PreparedStatement pstmt = null;
 
         try {
+            String sqlCountry = "insert into slotmachine.country (country_name) values (?);";
             pstmt = connection.prepareStatement(sqlCountry);
             pstmt.setString(1, country);
             pstmt.executeUpdate();
@@ -73,15 +103,16 @@ public class DbManager {
 
     }
 
-    public boolean populateCity(String country,
-                                String city,
-                                String timezone) {
+    private boolean populateCity(String country,
+                                 String city,
+                                 String utcOffset) {
         PreparedStatement pstmt = null;
         try {
+            String sqlCity = "insert into slotmachine.city (city_name, country, utc_offset) values (?, ?, ?);";
             pstmt = connection.prepareStatement(sqlCity);
             pstmt.setString(1, city);
             pstmt.setString(2, country);
-            pstmt.setString(3, timezone);
+            pstmt.setString(3, utcOffset);
             pstmt.executeUpdate();
             pstmt.close();
             return true;
@@ -91,11 +122,12 @@ public class DbManager {
 
     }
 
-    public boolean populateAirline(String airlineName,
-                                   String airlineAlias,
-                                   String airlineCountry) {
+    private boolean populateAirline(String airlineName,
+                                    String airlineAlias,
+                                    String airlineCountry) {
         PreparedStatement pstmt = null;
         try {
+            String sqlAirline = "insert into slotmachine.airline (airline_name, airline_alias, airline_country) values (?, ?, ?);";
             pstmt = connection.prepareStatement(sqlAirline);
             pstmt.setString(1, airlineName);
             pstmt.setString(2, airlineAlias);
@@ -109,13 +141,15 @@ public class DbManager {
 
     }
 
-    public boolean populateAirport(String airportName,
-                                   String airportAlias,
-                                   String airportCity,
-                                   String airportCountry) {
+
+    private boolean populateAirport(String airportName,
+                                    String airportAlias,
+                                    String airportCity,
+                                    String airportCountry) {
         PreparedStatement pstmt = null;
 
         try {
+            String sqlAirport = "insert into slotmachine.airport (airport_name, airport_alias, airport_city, airport_country) values (?, ?, ?, ?);";
             pstmt = connection.prepareStatement(sqlAirport);
             pstmt.setString(1, airportName);
             pstmt.setString(2, airportAlias);
@@ -130,13 +164,15 @@ public class DbManager {
 
     }
 
-    public boolean populateFlight(String departureAirport,
-                                  String destinationAirport,
-                                  String airline, Timestamp departureTime,
-                                  Timestamp destinationTime) {
+
+    private boolean populateFlight(String departureAirport,
+                                   String destinationAirport,
+                                   String airline, Timestamp departureTime,
+                                   Timestamp destinationTime) {
         PreparedStatement pstmt = null;
 
         try {
+            String sqlFlight = "insert into slotmachine.flight (departureAirport, destinationAirport, airline, departureTime, destinationTime) values (?,?,?,?,?);";
             pstmt = connection.prepareStatement(sqlFlight);
             pstmt.setString(1, departureAirport);
             pstmt.setString(2, destinationAirport);
@@ -152,20 +188,18 @@ public class DbManager {
     }
 
 
-    public static void main(String[] args) throws SQLException {
-
-        int NUMBER_OF_FLIGHS_FROM_SINGLE_AIRPORT = 20;
-
-
-        DbManager db = new DbManager();
-        Airport departureAirport = TestDataGenerator.getRandomAirport();
-        db.populateCountry(departureAirport.getCountry());
-        db.populateCity(departureAirport.getCountry(), departureAirport.getCity(), departureAirport.getUtcOffset());
-        db.populateAirport(departureAirport.getName(), departureAirport.getAlias(), departureAirport.getCity(), departureAirport.getCountry());
-
+    /**
+     * Populates the Database with random flights
+     *
+     * @param nrFlightsFromSingleAirport number of flights from a random departure airport
+     */
+    public void populateDB(int nrFlightsFromSingleAirport) {
         int i = 0;
-        while (i < NUMBER_OF_FLIGHS_FROM_SINGLE_AIRPORT) {
+        while (i < nrFlightsFromSingleAirport) {
 
+            Airport departureAirport = TestDataGenerator.getRandomAirport();
+
+            System.out.println("Added Item " + i);
             try {
                 Airline airline = TestDataGenerator.getRandomAirline();
                 Airport destinationAirport = TestDataGenerator.getRandomAirport();
@@ -174,56 +208,93 @@ public class DbManager {
 
                 Flight f = new Flight(departureAirport, destinationAirport, airline, departureDate, destinationDate);
 
-                db.populateCountry(airline.getCountry());
-                db.populateCountry(destinationAirport.getCountry());
-
-                db.populateCity(destinationAirport.getCountry(), destinationAirport.getCity(), destinationAirport.getUtcOffset());
-                db.populateAirport(destinationAirport.getName(), destinationAirport.getAlias(), destinationAirport.getCity(), destinationAirport.getCountry());
-                db.populateAirline(airline.getName(), airline.getAlias(), airline.getCountry());
-
-                //Timestamp can't keep Timezone --> convert to UTC
-                Timestamp departure = Timestamp.from(departureDate.toInstant());
-                Timestamp destination = Timestamp.from(destinationDate.toInstant());
-
-                db.populateFlight(departureAirport.getAlias(), destinationAirport.getAlias(), airline.getAlias(), departure, destination);
+                addFlight(f);
                 i += 1;
 
             } catch (Exception ignore) {
             }
         }
-        db.disconnect();
 
     }
 
+    /**
+     * Returns a list from all Flights stored in the database
+     *
+     * @return List of {@link Flight}
+     */
+    public List<Flight> getAllFlights() {
+
+        PreparedStatement pstmt = null;
+        List<Flight> flightList = new ArrayList<>();
+
+        try {
+            String sqlFlight = "SELECT *\n" +
+                    "FROM slotmachine.flight f\n" +
+                    "LEFT OUTER JOIN slotmachine.airline al ON f.airline = al.airline_alias\n" +
+                    "LEFT OUTER JOIN slotmachine.airport ap_des ON f.destinationairport = ap_des.airport_alias\n" +
+                    "LEFT OUTER JOIN slotmachine.airport ap_dep ON f.departureairport = ap_dep.airport_alias\n" +
+                    "LEFT OUTER JOIN slotmachine.city dep_city ON ap_dep.airport_city = dep_city.city_name \n" +
+                    "LEFT OUTER JOIN slotmachine.city des_city ON ap_des.airport_city = des_city.city_name \n";
+            pstmt = connection.prepareStatement(sqlFlight);
+            ResultSet rs = pstmt.executeQuery();
+
+            while (rs.next()) {
+                Flight f = getFlight(rs);
+                flightList.add(f);
+            }
+
+        } catch (Exception ignore) {
+        }
+
+        return flightList;
+    }
+
+    private Flight getFlight(ResultSet rs) throws SQLException {
+
+        Timestamp departuretime = rs.getTimestamp(5);
+        Timestamp destinationtime = rs.getTimestamp(6);
+
+        String airlineName = rs.getString(8);
+        String airlineAlias = rs.getString(9);
+        String airlineCountry = rs.getString(10);
+
+        String destinationAirportName = rs.getString(12);
+        String destinationAirportAlias = rs.getString(13);
+        String destinationAirportCity = rs.getString(14);
+        String destinationAirportCountry = rs.getString(15);
+
+        String departureAirportName = rs.getString(17);
+        String departureAirportAlias = rs.getString(18);
+        String departureAirportCity = rs.getString(19);
+        String departureAirportCountry = rs.getString(20);
+        String departureAirportTimeZoneOffset = rs.getString(24);
+        String destinationAirportTimeZoneOffset = rs.getString(28);
+
+        Airline al = new Airline(airlineName, airlineAlias, airlineCountry);
+        Airport apDep = new Airport(departureAirportName, departureAirportCity, departureAirportAlias, departureAirportCountry, departureAirportTimeZoneOffset);
+        Airport apDes = new Airport(destinationAirportName, destinationAirportCity, destinationAirportAlias, destinationAirportCountry, destinationAirportTimeZoneOffset);
+        OffsetDateTime departureTime = departuretime.toLocalDateTime().atOffset(ZoneOffset.of(departureAirportTimeZoneOffset));
+        OffsetDateTime destinationTime = destinationtime.toLocalDateTime().atOffset(ZoneOffset.of(destinationAirportTimeZoneOffset));
+
+        return new Flight(apDep, apDes, al, departureTime, destinationTime);
+    }
+
+    /**
+     * Add some entries to database and read them
+     */
+    public static void main(String[] args) {
+        DbManager dbm = new DbManager();
+        dbm.populateDB(20);
+
+        List<Flight> flist = dbm.getAllFlights();
+        for (Flight f : flist) {
+            System.out.println(f.toString());
+        }
+
+        dbm.disconnect();
+    }
 }
 
-
-/*
- * db.populateCountry("Austria");
- * db.populateCountry("Germany");
- * db.populateCountry("Switzerland");
- * db.populateCountry("Italy");
- * db.populateCountry("Sweden");
- * <p>
- * db.populateCity("Austria", "Vienna", "UTC+2");
- * db.populateCity("Germany", "Frankfurt", "UTC+2");
- * db.populateCity("Switzerland", "Bern", "UTC+2");
- * db.populateCity("Italy", "Rome", "UTC+2");
- * db.populateCity("Sweden", "Stockholm", "UTC+2");
- * <p>
- * <p>
- * db.populateAirport("Flughafen Wien-Schwechat", "VIE", "Vienna", "Austria");
- * db.populateAirport("Flughafen Frankfurt am Main", "FRA", "Frankfurt", "Germany");
- * <p>
- * <p>
- * db.populateAirline("Austrian Airlines", "OS", "Austria");
- * db.populateAirline("German Wings", "PW", "Germany");
- *
- * @Ignore Timestamp departure = new Timestamp(2019, 4, 25, 13, 45, 10, 0);
- * Timestamp destination = new Timestamp(2019, 4, 25, 14, 25, 10, 0);
- * db.populateFlight("VIE", "FRA", "OS", departure, destination);
- * db.populateFlight("VIE", "FRA", "OS", departure, destination);
- **/
 
 
 

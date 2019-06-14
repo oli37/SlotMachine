@@ -1,6 +1,5 @@
 package application;
 
-
 public class Airport {
 
     private String name;
@@ -15,15 +14,7 @@ public class Airport {
         this.city = city;
         this.country = country;
         this.alias = alias;
-
-        utcOffset= utcOffset.replace(".5", ":30");
-        if (!utcOffset.startsWith("-") ) {
-            StringBuilder sb = new StringBuilder();
-            sb.append("+");
-            sb.append(utcOffset);
-            utcOffset = sb.toString();
-        }
-        this.utcOffset = utcOffset;
+        this.utcOffset = format(utcOffset);
     }
 
 
@@ -56,6 +47,39 @@ public class Airport {
                 ", country='" + country + '\'' +
                 ", utcOffset='" + utcOffset + '\'' +
                 '}';
+    }
+
+    /**
+     * @param utcOffset according to csv-format
+     * @return utcOffset according to {@link java.time.ZoneOffset}
+     * @see java.time.ZoneOffset
+     */
+    private String format(String utcOffset) {
+
+        //System.out.println("IN:  "+utcOffset);
+        utcOffset = utcOffset.replace(".25", ":15");
+        utcOffset = utcOffset.replace(".5", ":30");
+        utcOffset = utcOffset.replace(".75", ":45");
+        utcOffset = utcOffset.replace("N", "0");
+        if (utcOffset.isEmpty()) {
+            utcOffset = "0";
+        }
+
+        if (!utcOffset.startsWith("-")) {
+            StringBuilder sb = new StringBuilder();
+            sb.append("+");
+
+            if (utcOffset.contains(".") &&
+                    (!utcOffset.contains("10") || !utcOffset.contains("11") || !utcOffset.contains("12"))) {
+                sb.append("0");
+            }
+
+
+            sb.append(utcOffset);
+            utcOffset = sb.toString();
+        }
+
+        return utcOffset;
     }
 }
 
