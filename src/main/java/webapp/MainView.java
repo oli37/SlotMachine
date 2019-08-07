@@ -1,9 +1,9 @@
 package webapp;
 
 import com.vaadin.flow.component.button.Button;
+import com.vaadin.flow.component.dependency.HtmlImport;
 import com.vaadin.flow.component.html.H4;
 import com.vaadin.flow.component.html.Image;
-import com.vaadin.flow.component.notification.Notification;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.router.Route;
@@ -17,6 +17,7 @@ import java.io.FileNotFoundException;
  * The main view of the application
  */
 @Route("")
+@HtmlImport("style.html")
 
 public class MainView extends VerticalLayout {
 
@@ -66,7 +67,8 @@ public class MainView extends VerticalLayout {
 
         sideMenu.add(createMenuOption("Dashboard"),
                 createMenuOption("Flights"),
-                createMenuOption("Slots"));
+                createMenuOption("Schedule"),
+                createMenuOption("Auction"));
         sideMenu.setAlignItems(Alignment.CENTER);
         sideMenu.getStyle().set("background-color", "#E74C3C");
 
@@ -86,8 +88,12 @@ public class MainView extends VerticalLayout {
         menuButton.getStyle().set("color", "black");
         menuButton.getStyle().set("background-color", "white");
         //menuButton.addClickListener(ev -> Notification.show("Button " + title + " clicked."));
-        menuButton.addClickListener(ev -> Notification.show("Button " + title + " clicked."));
 
+        //TODO: Replace with reflection API
+        if (title.equals("Dashboard")) menuButton.addClickListener(ev -> content.drawDashboard());
+        if (title.equals("Flights")) menuButton.addClickListener(ev -> content.drawFlights());
+        if (title.equals("Schedule")) menuButton.addClickListener(ev -> content.drawSchedule());
+        if (title.equals("Auction")) menuButton.addClickListener(ev -> content.drawAuction());
 
         return menuButton;
     }

@@ -12,17 +12,22 @@ import java.util.logging.Logger;
 public class XMLReader {
 
     private static final Logger LOGGER = Logger.getLogger("SlotMachine");
+    private List<String[]> list;
+    private String path;
 
+    public XMLReader(String path) {
+        this.path = path;
+        this.list = getListOfRows();
+
+    }
 
     /**
      * Returns a list of String arrays from XML-file
      *
-     * @param path path to the XML File
      * @return a List of Rows
      */
-    static List<String[]> ReadXML(String path) {
+    public List<String[]> getListOfRows() {
 
-        List<String[]> list;
 
         try {
             FileReader fileReader = new FileReader(path);
@@ -44,15 +49,12 @@ public class XMLReader {
     /**
      * Returns random row from XML-file
      *
-     * @param path path to XML File
      * @return String array
      */
-    static String[] RandomRowFromXML(String path) {
+    public String[] getRandomRow() {
 
-        List<String[]> list = ReadXML(path);
-        int maxLen = 0;
         if (list != null) {
-            maxLen = list.size();
+            int maxLen = list.size();
             Random random = new Random();
             int rand = random.nextInt(maxLen - 1) + 1;
             return list.get(rand);
@@ -60,6 +62,23 @@ public class XMLReader {
         return null;
     }
 
+    /**
+     * Returns a given row from XML-file
+     *
+     * @param row of the XML file
+     * @return String array, NULL if not available or outside of range
+     */
+    public String[] getRow(int row) {
+
+        if (list != null && row <= list.size()) {
+            return list.get(row);
+        }
+        return null;
+    }
+
+    public int getLenght() {
+        return list.size();
+    }
 
 }
 

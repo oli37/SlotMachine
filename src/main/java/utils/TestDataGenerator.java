@@ -3,7 +3,11 @@ package utils;
 import application.Airline;
 import application.Airport;
 
-import java.time.*;
+import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
+import java.time.ZoneOffset;
+import java.util.ArrayList;
+import java.util.List;
 
 public class TestDataGenerator {
 
@@ -15,7 +19,8 @@ public class TestDataGenerator {
     public static Airport getRandomAirport() {
 
         String PATH = "src/main/resources/airports.csv";
-        String[] res = XMLReader.RandomRowFromXML(PATH);
+        XMLReader xml = new XMLReader(PATH);
+        String[] res = xml.getRandomRow();
         if (res != null) {
 
             // Names are formatted: "Campbell River application.Airport"
@@ -29,8 +34,37 @@ public class TestDataGenerator {
 
         }
         return null;
-
     }
+
+    /**
+     * Returns a list of Airports
+     *
+     * @return a list of Airports
+     */
+
+    public static List<Airport> getAllAirports() {
+
+        String PATH = "src/main/resources/airports.csv";
+        List<Airport> airportList = new ArrayList<>();
+        XMLReader xml = new XMLReader(PATH);
+        List<String[]> list = xml.getListOfRows();
+
+        for (String[] res : list) {
+            if (res != null) {
+
+                // Names are formatted: "Campbell River application.Airport"
+                String name = res[1].split("application")[0];
+                String city = res[2];
+                String country = res[3];
+                String alias = res[4];
+                String utcOffset = res[9];
+
+                airportList.add(new Airport(name, city, alias, country, utcOffset));
+            }
+        }
+        return airportList;
+    }
+
 
     /**
      * Returns a random Airline
@@ -40,7 +74,8 @@ public class TestDataGenerator {
     public static Airline getRandomAirline() {
 
         String PATH = "src/main/resources/airlines.csv";
-        String[] res = XMLReader.RandomRowFromXML(PATH);
+        XMLReader xml = new XMLReader(PATH);
+        String[] res = xml.getRandomRow();
         if (res != null) {
             String name = res[1];
             String alias = res[4];
@@ -48,6 +83,32 @@ public class TestDataGenerator {
             return new Airline(name, alias, country);
         }
         return null;
+    }
+
+
+    /**
+     * Returns a list of Airlines
+     *
+     * @return a list of Airlines
+     */
+    public static List<Airline> getAllAirlines() {
+
+        String PATH = "src/main/resources/airlines.csv";
+        List<Airline> airlineList = new ArrayList<>();
+        XMLReader xml = new XMLReader(PATH);
+        List<String[]> list = xml.getListOfRows();
+
+        for (String[] res : list) {
+            if (res != null) {
+                String name = res[1];
+                String alias = res[4];
+                String country = res[6];
+
+                airlineList.add(new Airline(name, alias, country));
+            }
+        }
+        return airlineList;
+
     }
 
 

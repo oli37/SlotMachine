@@ -61,6 +61,7 @@ public class Airport {
         utcOffset = utcOffset.replace(".5", ":30");
         utcOffset = utcOffset.replace(".75", ":45");
         utcOffset = utcOffset.replace("N", "0");
+        utcOffset = utcOffset.replace("+", "");
         if (utcOffset.isEmpty()) {
             utcOffset = "0";
         }

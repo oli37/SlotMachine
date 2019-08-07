@@ -1,12 +1,12 @@
 create schema if not exists slotmachine;
 
-create table slotmachine.country(
+create table if not exists slotmachine.country(
 country_id serial,
 country_name varchar(255) not null unique,
 primary key(country_name)
 );
 
-create table slotmachine.city(
+create table if not exists slotmachine.city(
 city_id serial,
 city_name varchar(255) not null,
 country varchar(255) not null,
@@ -15,7 +15,7 @@ primary key(city_name, country),
 foreign key (country) references slotmachine.country(country_name)
 );
 
-create table slotmachine.airline(
+create table if not exists slotmachine.airline(
 airline_id serial not null,
 airline_name varchar(255) not null,
 airline_alias varchar(3) not null unique,
@@ -24,7 +24,7 @@ primary key(airline_alias),
 foreign key (airline_country) references slotmachine.country(country_name)
 );
 
-create table slotmachine.airport(
+create table if not exists slotmachine.airport(
 airport_id serial not null,
 airport_name varchar(255) not null,
 airport_alias varchar(3) not null unique,
@@ -34,7 +34,7 @@ primary key(airport_alias),
 foreign key (airport_city, airport_country) references slotmachine.city(city_name, country)
 );
 
-create table slotmachine.flight(
+create table if not exists slotmachine.flight(
 flight_id serial not null,
 departureAirport varchar(3),
 destinationAirport varchar(3),
