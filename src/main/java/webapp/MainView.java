@@ -1,7 +1,6 @@
 package webapp;
 
 import com.vaadin.flow.component.button.Button;
-import com.vaadin.flow.component.dependency.HtmlImport;
 import com.vaadin.flow.component.html.H4;
 import com.vaadin.flow.component.html.Image;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
@@ -17,7 +16,6 @@ import java.io.FileNotFoundException;
  * The main view of the application
  */
 @Route("")
-@HtmlImport("style.html")
 
 public class MainView extends VerticalLayout {
 

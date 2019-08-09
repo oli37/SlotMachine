@@ -1,6 +1,6 @@
 package application;
 
-public class Airport {
+public class Airport implements Cloneable {
 
     private String name;
     private String city;
