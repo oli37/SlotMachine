@@ -8,13 +8,15 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 
-public class CustomDateTimePicker extends CustomField<LocalDateTime> {
+public class DateTimePicker extends CustomField<LocalDateTime> {
 
     private final DatePicker datePicker = new DatePicker();
     private final TimePicker timePicker = new TimePicker();
 
-    CustomDateTimePicker() {
-        setLabel("Start datetime");
+
+    DateTimePicker() {
+        datePicker.setWidthFull();
+        timePicker.setWidthFull();
         add(datePicker, timePicker);
     }
 
@@ -34,7 +36,7 @@ public class CustomDateTimePicker extends CustomField<LocalDateTime> {
         timePicker.setValue(newPresentationValue != null ?
                 newPresentationValue.toLocalTime() :
                 null);
-
     }
+
 
 }

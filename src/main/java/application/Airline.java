@@ -1,7 +1,5 @@
 package application;
 
-import utils.XMLReader;
-
 import java.util.logging.Logger;
 
 public class Airline {
@@ -11,6 +9,10 @@ public class Airline {
     private String country;
 
     private static final Logger LOGGER = Logger.getLogger("SlotMachine");
+
+    public Airline(String alias) {
+        this.alias = alias;
+    }
 
     public Airline(String name, String alias, String country) {
         this.name = name;

@@ -18,10 +18,10 @@ public class AirportServiceProvider implements ServiceProvider {
 
     @Override
     public List<Airport> fetch(int offset, int limit) {
-        String sqlAirport = "select air.airport_name, air.airport_alias, air.airport_city, air.airport_country, c.utc_offset \n" +
-                "from  slotmachine.airport as air\n" +
-                "left join slotmachine.city as c on c.city_name = air.airport_city\n" +
-                "order by air.airport_alias\n";
+        String sqlAirport = "SELECT air.airport_name, air.airport_alias, air.airport_city, air.airport_country, c.utc_offset \n" +
+                "FROM  slotmachine.airport AS air\n" +
+                "LEFT JOIN slotmachine.city AS c ON c.city_name = air.airport_city\n" +
+                "ORDER BY air.airport_alias\n";
 
         if (limit != 0) sqlAirport = sqlAirport + "offset ? limit ?";
 
@@ -55,7 +55,7 @@ public class AirportServiceProvider implements ServiceProvider {
     }
 
     @Override
-    public List<?> fetchAll() {
+    public List<Airport> fetchAll() {
         return fetch(0, 0);
     }
 

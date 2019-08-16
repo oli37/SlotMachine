@@ -2,12 +2,11 @@ package db;
 
 import java.util.List;
 
-public interface ServiceProvider extends Cloneable {
+public interface ServiceProvider {
 
     List<?> fetch(int offset, int limit);
 
     List<?> fetchAll();
-
     int getCount();
 
 }

@@ -26,9 +26,9 @@ public class DbManager {
 
         try {
             connection = DriverManager.getConnection(url, user, password);
-            System.out.println("Connected to the PostgreSQL server successfully.");
+            System.out.println("Connection successful");
         } catch (SQLException ignore) {
-            System.out.println("No connection could be established.");
+            System.out.println("Connection failed");
         }
 
     }
@@ -87,87 +87,6 @@ public class DbManager {
     }
 
 
-    public List<Airline> fetchAirlines(int offset, int limit) {
-        String sqlAirline = "select * from  slotmachine.airline order by airline_alias\n";
-        if (offset != 0 && limit != 0) sqlAirline = sqlAirline + "offset ? limit ?";
-
-        PreparedStatement pstmt = null;
-        List<Airline> airlineList = new ArrayList<>();
-
-        try {
-            pstmt = connection.prepareStatement(sqlAirline);
-            if (offset != 0 && limit != 0) {
-                pstmt.setInt(1, offset);
-                pstmt.setInt(2, limit);
-            }
-            ResultSet res = pstmt.executeQuery();
-
-            while (res.next()) {
-                String name = res.getString(2);
-                String alias = res.getString(3);
-                String country = res.getString(4);
-
-                Airline airline = new Airline(name, alias, country);
-                airlineList.add(airline);
-            }
-
-            pstmt.close();
-            res.close();
-        } catch (Exception ignore) {
-            ignore.printStackTrace();
-        }
-        return airlineList;
-    }
-
-    public List<Airline> fetchAllAirlines() {
-
-        return fetchAirlines(0, 0);
-    }
-
-    public List<Airport> fetchAirports(int offset, int limit) {
-
-        String sqlAirline = "select air.airport_name, air.airport_alias, air.airport_city, air.airport_country, c.utc_offset \n" +
-                "from  slotmachine.airport as air\n" +
-                "left join slotmachine.city as c on c.city_name = air.airport_city\n" +
-                "order by air.airport_alias\n";
-
-        if (offset != 0 && limit != 0) sqlAirline = sqlAirline + "offset ? limit ?";
-
-        PreparedStatement pstmt;
-        List<Airport> airportList = new ArrayList<>();
-
-        try {
-            pstmt = connection.prepareStatement(sqlAirline);
-            if (offset != 0 && limit != 0) {
-                pstmt.setInt(1, offset);
-                pstmt.setInt(2, limit);
-            }
-            ResultSet res = pstmt.executeQuery();
-
-            while (res.next()) {
-                String name = res.getString(1);
-                String alias = res.getString(2);
-                String city = res.getString(3);
-                String country = res.getString(4);
-                String utcOffset = res.getString(5);
-                Airport airport = new Airport(name, city, alias, country, utcOffset);
-                airportList.add(airport);
-            }
-
-            pstmt.close();
-            res.close();
-        } catch (Exception ignore) {
-            ignore.printStackTrace();
-        }
-        return airportList;
-    }
-
-    public List<Airport> fetchaAllAirports() {
-
-        return fetchAirports(0, 0);
-    }
-
-
     /**
      * Populates the Database with random flights
      *
@@ -176,11 +95,10 @@ public class DbManager {
     public void populateDB(int nrFlightsFromSingleAirport) {
         int i = 0;
         while (i < nrFlightsFromSingleAirport) {
-
-            Airport departureAirport = TestDataGenerator.getRandomAirport();
-
-            System.out.println("Added Item " + i);
             try {
+                System.out.println("Added Item " + i);
+
+                Airport departureAirport = TestDataGenerator.getRandomAirport();
                 Airline airline = TestDataGenerator.getRandomAirline();
                 Airport destinationAirport = TestDataGenerator.getRandomAirport();
                 OffsetDateTime departureDate = TestDataGenerator.getRandomDate(2019, 4, 10, departureAirport.getUtcOffset());
@@ -192,6 +110,7 @@ public class DbManager {
                 i += 1;
 
             } catch (Exception ignore) {
+                i -= 1;
             }
         }
 
@@ -266,20 +185,29 @@ public class DbManager {
     public static void main(String[] args) {
 
         DbManager dbm = new DbManager();
-        //dbm.populateDB(50);
+        var airports = TestDataGenerator.getAllAirports();
+        var airlines = TestDataGenerator.getAllAirlines();
+
+
+        airports.forEach(dbm::addAirport);
+        airlines.forEach(dbm::addAirline);
+
+        dbm.populateDB(15);
+        dbm.disconnect();
+
 
         var start = System.nanoTime();
         FlightServceProvider flsp = new FlightServceProvider();
-        var a = flsp.fetch(60, 10);
+        int limit = flsp.getCount();
+        System.out.println("Limit: " + limit);
+        var a = flsp.fetchAll();
         a.forEach(System.out::println);
         System.out.println(a.size());
 
         var end = System.nanoTime();
 
-        System.out.println((end - start) / 1000000);
+        System.out.println((end - start) / 1000000 + " ms");
 
-
-        //DbManager dbm = new DbManager();
         //List<Airline> al = dbm.fetchAirlines(50, 100);
 
         //al.forEach(System.out::println);
@@ -289,7 +217,6 @@ public class DbManager {
         //ap.forEach(System.out::println);
         //System.out.println(ap.size());
 
-        //dbm.disconnect();
     }
 
 

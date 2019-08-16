@@ -19,7 +19,7 @@ public class AirlineServiceProvider implements ServiceProvider {
     @Override
     public List<Airline> fetch(int offset, int limit) {
 
-        String sqlAirline = "select * from  slotmachine.airline order by airline_alias\n";
+        String sqlAirline = "SELECT * FROM slotmachine.airline WHERE airline_alias ~ '[A-Z0-9]' ORDER BY airline_alias\n";
         if (limit != 0) sqlAirline = sqlAirline + "offset ? limit ?";
 
         PreparedStatement pstmt = null;
@@ -34,9 +34,9 @@ public class AirlineServiceProvider implements ServiceProvider {
             ResultSet res = pstmt.executeQuery();
 
             while (res.next()) {
-                String name = res.getString(2);
-                String alias = res.getString(3);
-                String country = res.getString(4);
+                String name = res.getString(1);
+                String alias = res.getString(2);
+                String country = res.getString(3);
 
                 Airline airline = new Airline(name, alias, country);
                 airlineList.add(airline);
@@ -51,13 +51,14 @@ public class AirlineServiceProvider implements ServiceProvider {
     }
 
     @Override
-    public List<?> fetchAll() {
+    public List<Airline> fetchAll() {
         return fetch(0, 0);
     }
 
     @Override
     public int getCount() {
-        return 1000;
+
+        return fetchAll().size();
     }
 
 }

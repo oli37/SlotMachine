@@ -1,5 +1,7 @@
 package application;
 
+import java.time.ZoneOffset;
+
 public class Airport implements Cloneable {
 
     private String name;
@@ -8,6 +10,9 @@ public class Airport implements Cloneable {
     private String country;
     private String utcOffset;
 
+    public Airport(String alias) {
+        this.alias = alias;
+    }
 
     public Airport(String name, String city, String alias, String country, String utcOffset) {
         this.name = name;
@@ -70,17 +75,22 @@ public class Airport implements Cloneable {
             StringBuilder sb = new StringBuilder();
             sb.append("+");
 
-            if (utcOffset.contains(".") &&
+            if (utcOffset.contains(":") &&
                     (!utcOffset.contains("10") || !utcOffset.contains("11") || !utcOffset.contains("12"))) {
                 sb.append("0");
             }
-
 
             sb.append(utcOffset);
             utcOffset = sb.toString();
         }
 
         return utcOffset;
+    }
+
+
+    public static void main(String[] args) {
+        var a = new Airport("name", "city", "alias", "country", "9");
+        System.out.println(ZoneOffset.of(a.getUtcOffset()));
     }
 }
 
