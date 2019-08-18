@@ -6,6 +6,7 @@ import java.util.concurrent.TimeUnit;
 
 public class Flight {
 
+    private int flightID;
     private Airport departureAirport;
     private Airport destinationAirport;
     private Airline airline;
@@ -26,6 +27,9 @@ public class Flight {
         this.destinationTime = destination_time;
     }
 
+    public int getFlightID() {
+        return this.hashCode();
+    }
 
     public Airport getDepartureAirport() {
         return departureAirport;

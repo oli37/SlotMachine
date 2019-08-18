@@ -53,10 +53,42 @@ public class FlightServceProvider implements ServiceProvider {
         return flightList;
     }
 
+    public List<Flight> fetchByAirline(String airlineAlias) {
+        PreparedStatement pstmt = null;
+        List<Flight> flightList = new ArrayList<>();
+
+        try {
+            String sqlFlight = "SELECT *\n" +
+                    "FROM slotmachine.flight f\n" +
+                    "LEFT OUTER JOIN slotmachine.airline al ON f.airline = al.airline_alias\n" +
+                    "LEFT OUTER JOIN slotmachine.airport ap_des ON f.destinationairport = ap_des.airport_alias\n" +
+                    "LEFT OUTER JOIN slotmachine.airport ap_dep ON f.departureairport = ap_dep.airport_alias\n" +
+                    "LEFT OUTER JOIN slotmachine.city dep_city ON ap_dep.airport_city = dep_city.city_name\n" +
+                    "LEFT OUTER JOIN slotmachine.city des_city ON ap_des.airport_city = des_city.city_name\n" +
+                    "WHERE f.airline = ?\n" +
+                    "ORDER BY al.airline_alias\n";
+
+            pstmt = connection.prepareStatement(sqlFlight);
+            pstmt.setString(1, airlineAlias);
+            ResultSet rs = pstmt.executeQuery();
+
+            while (rs.next()) {
+                Flight f = getFlight(rs);
+                flightList.add(f);
+            }
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return flightList;
+
+    }
+
     @Override
     public List<Flight> fetchAll() {
         return fetch(0, 0);
     }
+
 
     @Override
     public int getCount() {

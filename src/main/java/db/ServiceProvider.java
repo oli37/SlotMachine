@@ -7,6 +7,7 @@ public interface ServiceProvider {
     List<?> fetch(int offset, int limit);
 
     List<?> fetchAll();
+
     int getCount();
 
 }

@@ -184,6 +184,12 @@ public class DbManager {
      */
     public static void main(String[] args) {
 
+        FlightServceProvider flsp = new FlightServceProvider();
+        var a = flsp.fetchByAirline("AEL");
+
+        a.forEach(System.out::println);
+
+/*
         DbManager dbm = new DbManager();
         var airports = TestDataGenerator.getAllAirports();
         var airlines = TestDataGenerator.getAllAirlines();
@@ -216,7 +222,7 @@ public class DbManager {
         //List<Airport> ap = dbm.fetchAirports(0, 0);
         //ap.forEach(System.out::println);
         //System.out.println(ap.size());
-
+*/
     }
 
 

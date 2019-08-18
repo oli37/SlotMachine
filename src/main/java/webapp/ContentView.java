@@ -58,7 +58,7 @@ public class ContentView extends HorizontalLayout {
         flightGrid.add(new H6("FLIGHTS"));
 
         FlightServceProvider flsp = new FlightServceProvider();
-        DataProvider<Flight, Void> dataProviderFLight = DataProvider.fromCallbacks(
+        DataProvider<Flight, Void> dataProviderFlight = DataProvider.fromCallbacks(
                 query -> {
                     int offset = query.getOffset();
                     int limit = query.getLimit();
@@ -68,7 +68,7 @@ public class ContentView extends HorizontalLayout {
 
 
         Grid<Flight> grid = new Grid<>();
-        grid.setDataProvider(dataProviderFLight);
+        grid.setDataProvider(dataProviderFlight);
 
         grid.addColumn(flight -> flight.getAirline().getAlias()).setHeader("Airline");
         grid.addColumn(flight -> flight.getDepartureAirport().getAlias()).setHeader("Departure Airport");
@@ -150,13 +150,7 @@ public class ContentView extends HorizontalLayout {
         commitButton.setWidth("100%");
         commitButton.getStyle().set("margin-top", "50px");
         commitButton.addClickListener(event -> {
-/*
-            System.out.println(airline);
-            System.out.println(desAirport);
-            System.out.println(depAirport);
-            System.out.println(Timestamp.valueOf(LocalDateTime.of(depDate.get(), depTime.get())));
-            System.out.println(Timestamp.valueOf(LocalDateTime.of(desDate.get(), desTime.get())));
-*/
+
             if (flsp.post(airline.get(),
                     depAirport.get(),
                     desAirport.get(),
@@ -199,7 +193,7 @@ public class ContentView extends HorizontalLayout {
         subComponent.add(new H6("AUCTION"));
 
         HorizontalLayout airlineSelection = new HorizontalLayout();
-        HorizontalLayout auction = new HorizontalLayout();
+        VerticalLayout auction = new VerticalLayout();
 
         Label airlineLabel = new Label("Select Airline:");
         airlineLabel.getStyle().set("margin-top", "auto");
@@ -214,26 +208,41 @@ public class ContentView extends HorizontalLayout {
         airlineCombobox.setItems(airlines);
         airlineCombobox.setWidthFull();
 
+        var flsp = new FlightServceProvider();
+        Grid<Flight> grid = new Grid<>();
+        grid.addColumn(flight -> flight.getFlightID()).setHeader("ID");
+        grid.addColumn(flight -> flight.getAirline().getAlias()).setHeader("Airline");
+        grid.addColumn(flight -> flight.getDepartureAirport().getAlias()).setHeader("Departure Airport");
+        grid.addColumn(flight -> flight.getDepartureTime()).setHeader("Departure Time");
+        grid.addColumn(flight -> flight.getDestinationAirport().getAlias()).setHeader("Destination Airport");
+        grid.addColumn(flight -> flight.getDestinationTime()).setHeader("Departure Airport");
+        grid.setHeight("50%");
+
         airlineCombobox.addValueChangeListener(event -> {
-            if (event.getSource().isEmpty()) {
-                auction.removeAll();
-                auction.add(new H6("Empty"));
-            } else {
-                auction.removeAll();
-                auction.add(new H6("Selected: " + event.getValue()));
-            }
+            var items = flsp.fetchByAirline(event.getValue());
+            grid.setItems(items);
+            items.forEach(System.out::println);
+        });
+
+        VerticalLayout offer = new VerticalLayout();
+        offer.setWidth("50%");
+
+        var text = new H6();
+        grid.asSingleSelect().addValueChangeListener(event -> {
+            text.setText(event.getValue().toString());
+            offer.removeAll();
+            offer.add(text);
         });
 
         airlineSelection.add(airlineLabel, airlineCombobox);
 
+        subComponent.setSizeFull();
+        auction.setSizeFull();
+        auction.add(grid);
+        auction.add(offer);
         auction.getStyle().set("background-color", "orange");
-        auction.setWidthFull();
-        auction.setHeightFull();
 
-        subComponent.add(airlineSelection);
-        subComponent.add(auction);
-
-
+        subComponent.add(airlineSelection, auction);
         add(subComponent);
 
     }
