@@ -129,6 +129,8 @@ public class FlightServceProvider implements ServiceProvider {
 
     private Flight getFlight(ResultSet rs) throws SQLException {
 
+        //int id =
+
         Timestamp departuretime = rs.getTimestamp(5);
         Timestamp destinationtime = rs.getTimestamp(6);
 

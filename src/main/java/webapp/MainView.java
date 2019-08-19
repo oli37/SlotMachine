@@ -85,7 +85,6 @@ public class MainView extends VerticalLayout {
         menuButton.setClassName(title);
         menuButton.getStyle().set("color", "black");
         menuButton.getStyle().set("background-color", "white");
-        //menuButton.addClickListener(ev -> Notification.show("Button " + title + " clicked."));
 
         //TODO: Replace with reflection API
         if (title.equals("Dashboard")) menuButton.addClickListener(ev -> content.drawDashboard());
