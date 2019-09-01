@@ -2,28 +2,34 @@ package webapp;
 
 import application.Airline;
 import application.Flight;
+import application.Proposal;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.button.ButtonVariant;
 import com.vaadin.flow.component.combobox.ComboBox;
 import com.vaadin.flow.component.grid.Grid;
 import com.vaadin.flow.component.html.H6;
 import com.vaadin.flow.component.html.Label;
+import com.vaadin.flow.component.notification.Notification;
 import com.vaadin.flow.component.orderedlayout.FlexComponent;
 import com.vaadin.flow.component.orderedlayout.FlexLayout;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.component.textfield.NumberField;
 import db.AirlineServiceProvider;
-import db.AuctionServiceProvider;
-import db.FlightServceProvider;
+import db.FlightServiceProvider;
+import db.ProposalServiceProvider;
 
+import java.time.OffsetDateTime;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.stream.Collectors;
 
-public class AuctionView extends FlexLayout {
+public class ProposalView extends FlexLayout {
 
-    HorizontalLayout offer = new HorizontalLayout();
+    private HorizontalLayout offer = new HorizontalLayout();
+    private int flightID = 0;
+    private OffsetDateTime initialTime;
+    private OffsetDateTime desiredTime;
 
     public FlexComponent draw() {
         VerticalLayout subComponent = new VerticalLayout();
@@ -46,7 +52,7 @@ public class AuctionView extends FlexLayout {
         airlineCombobox.setItems(airlines);
         airlineCombobox.setWidthFull();
 
-        var flsp = new FlightServceProvider();
+        var flsp = new FlightServiceProvider();
         Grid<Flight> grid = new Grid<>();
         grid.addColumn(flight -> flight.getFlightID()).setHeader("ID");
         grid.addColumn(flight -> flight.getAirline().getAlias()).setHeader("Airline");
@@ -55,6 +61,12 @@ public class AuctionView extends FlexLayout {
         grid.addColumn(flight -> flight.getDestinationAirport().getAlias()).setHeader("Destination Airport");
         grid.addColumn(flight -> flight.getDestinationTime()).setHeader("Destination Time");
         grid.setHeight("50%");
+
+        grid.addSelectionListener(event -> {
+            Flight f = event.getFirstSelectedItem().get();
+            flightID = f.getFlightID();
+            initialTime = f.getDepartureTime();
+        });
 
         airlineCombobox.addValueChangeListener(event -> {
             var items = flsp.fetchByAirline(event.getValue());
@@ -95,7 +107,7 @@ public class AuctionView extends FlexLayout {
 
         NumberField delay = new NumberField();
         delay.setHasControls(true);
-        delay.setStep(5);
+        delay.setStep(15);
 
         Button bidButton = new Button("Bid");
         Button askButton = new Button("Ask");
@@ -124,10 +136,19 @@ public class AuctionView extends FlexLayout {
 
         commitButton.addClickListener(event -> {
 
-            var d = delay.getValue();
-            var p = price.getValue();
+            double d = delay.getValue();
+            double p = price.getValue();
+            var psp = new ProposalServiceProvider();
 
-            var asp = new AuctionServiceProvider();
+            var proposal = new Proposal(flightID,
+                    -9999999,
+                    (float) p,
+                    isBid.get(),
+                    initialTime.toLocalDateTime(),
+                    initialTime.plusMinutes((long) d).toLocalDateTime());
+
+            psp.post(proposal);
+            Notification.show("Proposal added").setPosition(Notification.Position.BOTTOM_START);
             offer.removeAll();
         });
 

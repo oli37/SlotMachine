@@ -45,9 +45,9 @@ foreign key (destinationAirport) references airport(airport_alias),
 foreign key (airline) references airline(airline_alias)
 );
 
-create table if not exists slotmachine.auction(
-auction_id serial,
-flight_id integer,
+create table if not exists slotmachine.proposal(
+auction_id serial not null,
+flight_id integer not null,
 price real not null,
 bid bool not null,
 ask bool not null,
@@ -56,4 +56,10 @@ desiredTime timestamp not null,
 primary key (auction_id),
 foreign key (flight_id) references flight(flight_id),
 check (bid !=ask)
+);
+
+create table if not exists slotmachine.costfunction(
+cf_id integer,
+proposal integer,
+foreign key (proposal) references proposal(auction_id)
 );

@@ -17,7 +17,7 @@ import com.vaadin.flow.data.provider.DataProvider;
 import db.AirlineServiceProvider;
 import db.AirportServiceProvider;
 import db.DbManager;
-import db.FlightServceProvider;
+import db.FlightServiceProvider;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -48,7 +48,7 @@ public class FlightView extends FlexLayout {
         //Table of flights
         flightGrid.add(new H6("FLIGHTS"));
 
-        FlightServceProvider flsp = new FlightServceProvider();
+        FlightServiceProvider flsp = new FlightServiceProvider();
         DataProvider<Flight, Void> dataProviderFlight = DataProvider.fromCallbacks(
                 query -> {
                     int offset = query.getOffset();

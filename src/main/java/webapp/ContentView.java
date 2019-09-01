@@ -22,15 +22,15 @@ public class ContentView extends HorizontalLayout {
         add((Component) flightView.draw());
     }
 
-    public void drawSchedule() {
+    public void drawCostFunction() {
+        var cfView = new CostFunctionView();
+        cfView.setSizeFull();
         removeAll();
-        VerticalLayout schedule = new VerticalLayout();
-        schedule.add(new H6("SCHEDULE"));
-        add(schedule);
+        add(cfView.draw());
     }
 
-    public void drawAuction() {
-        var auctionView = new AuctionView();
+    public void drawProposal() {
+        var auctionView = new ProposalView();
         auctionView.setSizeFull();
         removeAll();
         add((Component) auctionView.draw());

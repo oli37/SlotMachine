@@ -25,7 +25,8 @@ public class DbManager {
     public DbManager() {
 
         try {
-            connection = DriverManager.getConnection(url, user, password);
+            if (connection == null)
+                connection = DriverManager.getConnection(url, user, password);
             System.out.println("Connection successful");
         } catch (SQLException ignore) {
             System.out.println("Connection failed");
@@ -179,51 +180,6 @@ public class DbManager {
         return new Flight(apDep, apDes, al, departureTime, destinationTime);
     }
 
-    /**
-     * Add some entries to database and read them
-     */
-    public static void main(String[] args) {
-
-        FlightServceProvider flsp = new FlightServceProvider();
-        var a = flsp.fetchByAirline("AEL");
-
-        a.forEach(System.out::println);
-
-/*
-        DbManager dbm = new DbManager();
-        var airports = TestDataGenerator.getAllAirports();
-        var airlines = TestDataGenerator.getAllAirlines();
-
-
-        airports.forEach(dbm::addAirport);
-        airlines.forEach(dbm::addAirline);
-
-        dbm.populateDB(15);
-        dbm.disconnect();
-
-
-        var start = System.nanoTime();
-        FlightServceProvider flsp = new FlightServceProvider();
-        int limit = flsp.getCount();
-        System.out.println("Limit: " + limit);
-        var a = flsp.fetchAll();
-        a.forEach(System.out::println);
-        System.out.println(a.size());
-
-        var end = System.nanoTime();
-
-        System.out.println((end - start) / 1000000 + " ms");
-
-        //List<Airline> al = dbm.fetchAirlines(50, 100);
-
-        //al.forEach(System.out::println);
-        //System.out.println(al.size());
-
-        //List<Airport> ap = dbm.fetchAirports(0, 0);
-        //ap.forEach(System.out::println);
-        //System.out.println(ap.size());
-*/
-    }
 
 
     /**

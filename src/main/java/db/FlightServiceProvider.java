@@ -11,12 +11,12 @@ import java.time.ZoneOffset;
 import java.util.ArrayList;
 import java.util.List;
 
-public class FlightServceProvider implements ServiceProvider {
+public class FlightServiceProvider implements ServiceProvider {
 
     private static Connection connection = null;
 
-    public FlightServceProvider() {
-        if (connection == null) FlightServceProvider.connection = new DbManager().getConnection();
+    public FlightServiceProvider() {
+        if (connection == null) FlightServiceProvider.connection = new DbManager().getConnection();
     }
 
     @Override
@@ -129,7 +129,7 @@ public class FlightServceProvider implements ServiceProvider {
 
     private Flight getFlight(ResultSet rs) throws SQLException {
 
-        //int id =
+        int id = rs.getInt(1);
 
         Timestamp departuretime = rs.getTimestamp(5);
         Timestamp destinationtime = rs.getTimestamp(6);
@@ -157,7 +157,7 @@ public class FlightServceProvider implements ServiceProvider {
         OffsetDateTime departureTime = departuretime.toLocalDateTime().atOffset(ZoneOffset.of(departureAirportTimeZoneOffset));
         OffsetDateTime destinationTime = destinationtime.toLocalDateTime().atOffset(ZoneOffset.of(destinationAirportTimeZoneOffset));
 
-        return new Flight(apDep, apDes, al, departureTime, destinationTime);
+        return new Flight(id, apDep, apDes, al, departureTime, destinationTime);
     }
 
 

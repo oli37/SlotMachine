@@ -14,21 +14,35 @@ public class Flight {
     private OffsetDateTime destinationTime;
 
 
-    public Flight(
-            Airport departure_airport,
-            Airport destination_airport,
-            Airline airline,
-            OffsetDateTime departure_time,
-            OffsetDateTime destination_time) {
-        this.departureAirport = departure_airport;
-        this.destinationAirport = destination_airport;
+    public Flight(int flightID,
+                  Airport departureAirport,
+                  Airport destinationAirport,
+                  Airline airline,
+                  OffsetDateTime departureTime,
+                  OffsetDateTime destinationTime) {
+        this.flightID = flightID;
+        this.departureAirport = departureAirport;
+        this.destinationAirport = destinationAirport;
         this.airline = airline;
-        this.departureTime = departure_time;
-        this.destinationTime = destination_time;
+        this.departureTime = departureTime;
+        this.destinationTime = destinationTime;
+    }
+
+    public Flight(Airport departureAirport,
+                  Airport destinationAirport,
+                  Airline airline,
+                  OffsetDateTime departureTime,
+                  OffsetDateTime destinationTime) {
+        this.flightID = this.hashCode();
+        this.departureAirport = departureAirport;
+        this.destinationAirport = destinationAirport;
+        this.airline = airline;
+        this.departureTime = departureTime;
+        this.destinationTime = destinationTime;
     }
 
     public int getFlightID() {
-        return this.hashCode();
+        return flightID;
     }
 
     public Airport getDepartureAirport() {

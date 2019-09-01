@@ -65,8 +65,9 @@ public class MainView extends VerticalLayout {
 
         sideMenu.add(createMenuOption("Dashboard"),
                 createMenuOption("Flights"),
-                createMenuOption("Schedule"),
-                createMenuOption("Auction"));
+                createMenuOption("Bid/Ask"), //called Proposal
+                createMenuOption("Cost Function"));
+
         sideMenu.setAlignItems(Alignment.CENTER);
         sideMenu.getStyle().set("background-color", "#E74C3C");
 
@@ -86,11 +87,11 @@ public class MainView extends VerticalLayout {
         menuButton.getStyle().set("color", "black");
         menuButton.getStyle().set("background-color", "white");
 
-        //TODO: Replace with reflection API
+        //TODO: Do it right
         if (title.equals("Dashboard")) menuButton.addClickListener(ev -> content.drawDashboard());
         if (title.equals("Flights")) menuButton.addClickListener(ev -> content.drawFlights());
-        if (title.equals("Schedule")) menuButton.addClickListener(ev -> content.drawSchedule());
-        if (title.equals("Auction")) menuButton.addClickListener(ev -> content.drawAuction());
+        if (title.equals("Cost Function")) menuButton.addClickListener(ev -> content.drawCostFunction());
+        if (title.equals("Bid/Ask")) menuButton.addClickListener(ev -> content.drawProposal());
 
         return menuButton;
     }
