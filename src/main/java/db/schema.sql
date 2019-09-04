@@ -59,7 +59,12 @@ check (bid !=ask)
 );
 
 create table if not exists slotmachine.costfunction(
-cf_id integer,
-proposal integer,
-foreign key (proposal) references proposal(auction_id)
+cf_name varchar (255),
+t1 real not null,
+t2 real not null,
+t3 real not null,
+t4 real not null,
+t5 real not null,
+t6 real not null,
+primary key(cf_name)
 );

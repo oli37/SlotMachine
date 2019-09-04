@@ -1,9 +1,7 @@
 package db;
 
 
-import application.Proposal;
-
-import java.time.LocalDateTime;
+import application.CostFunction;
 
 /**
  * This class is for playing around with DB stuff
@@ -13,13 +11,22 @@ public class Playground {
     public static void main(String[] args) {
 
 
+        CostFunctionServiceProvider cfsp = new CostFunctionServiceProvider();
+        cfsp.post(new CostFunction("3362s136", -100, 0, 300.5, 44, 700, 1200));
+
+        System.out.println(cfsp.getCount());
+
+
+        var list = cfsp.fetch(1, 50);
+        list.stream().map(x -> x.getName()).forEach(System.out::println);
+/*
         ProposalServiceProvider asp = new ProposalServiceProvider();
         var inittime = LocalDateTime.now();
         var destime = inittime.plusMinutes(120);
         Proposal a = new Proposal(121, 500, true, inittime, destime);
 
         asp.post(a);
-/*
+
         var series = new Series(100, 300, 600, -700);
 
         var neu =  Utility.changeSeries(series, 1, 1);
