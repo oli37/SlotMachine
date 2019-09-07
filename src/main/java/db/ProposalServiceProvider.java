@@ -6,7 +6,7 @@ import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
 
-public class ProposalServiceProvider<T> implements ServiceProvider {
+public class ProposalServiceProvider implements ServiceProvider {
 
     private static Connection connection = null;
 
@@ -33,12 +33,12 @@ public class ProposalServiceProvider<T> implements ServiceProvider {
             while (res.next()) {
                 int auctionID = res.getInt(1);
                 int flightID = res.getInt(2);
+                float price = res.getFloat(3);
+                boolean isBid = res.getBoolean(4);
+                Timestamp initialTime = res.getTimestamp(6);
+                Timestamp desiredTime = res.getTimestamp(7);
 
-                boolean isBid = res.getBoolean(3);
-                Timestamp initialTime = res.getTimestamp(5);
-                Timestamp desiredTime = res.getTimestamp(6);
-
-                Proposal proposal = new Proposal(auctionID, flightID, isBid, initialTime.toLocalDateTime(), desiredTime.toLocalDateTime());
+                Proposal proposal = new Proposal(auctionID, flightID, price, isBid, initialTime.toLocalDateTime(), desiredTime.toLocalDateTime());
                 proposalList.add(proposal);
             }
 
@@ -61,8 +61,37 @@ public class ProposalServiceProvider<T> implements ServiceProvider {
         return fetchAll().size();
     }
 
-    public boolean post() {
-        return false;
+    public List<Proposal> fetchByFlightID(int flightId) {
+        String sqlAuction2 = "SELECT * FROM slotmachine.proposal WHERE flight_id = ? ";
+
+        PreparedStatement pstmt;
+        List<Proposal> proposalList = new ArrayList<>();
+
+        try {
+            pstmt = connection.prepareStatement(sqlAuction2);
+            pstmt.setInt(1, flightId);
+
+            ResultSet res = pstmt.executeQuery();
+
+            while (res.next()) {
+                int auctionID = res.getInt(1);
+                int flightID = res.getInt(2);
+                float price = res.getFloat(3);
+                boolean isBid = res.getBoolean(4);
+                Timestamp initialTime = res.getTimestamp(6);
+                Timestamp desiredTime = res.getTimestamp(7);
+
+                Proposal proposal = new Proposal(auctionID, flightID, price, isBid, initialTime.toLocalDateTime(), desiredTime.toLocalDateTime());
+                proposalList.add(proposal);
+            }
+
+            pstmt.close();
+            res.close();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+        return proposalList;
     }
 
     public boolean post(Proposal proposal) {

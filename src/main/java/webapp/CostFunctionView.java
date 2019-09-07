@@ -41,7 +41,7 @@ public class CostFunctionView extends FlexLayout {
         cfView.getStyle().set("align-items", "center");
 
         series = new Series(-100, 0, 100, 200, 300, 400); //needed for representation in chart
-        var cf = new CostFunction("", -100, 0, 100, 200, 300, 400); //needed for representation in DB
+        var cf = new CostFunction("Unnamed", -100, 0, 100, 200, 300, 400); //needed for representation in DB
 
         series.setName("Cost Function");
         this.cfChart = getChart(series);
@@ -119,7 +119,6 @@ public class CostFunctionView extends FlexLayout {
                 query -> cfsp.getCount());
 
 
-        //For some reason changes with grids eg. dataprovider in Vaadin require a restart of jetty
         Grid<CostFunction> grid = new Grid<>();
         grid.setDataProvider(dataProviderCF);
         grid.addColumn(CostFunction::getName).setHeader("CF Name");
@@ -165,7 +164,8 @@ public class CostFunctionView extends FlexLayout {
         editView.add(t1, t2, t3, t4, t5, t6);
 
         cfView.setHeight("90%");
-        cfView.setWidth("70%");//("880px");
+        cfView.setMinWidth("880px");
+        cfView.setWidth("70%");
         cfView.add(editView, cfChart, confirmationView);
 
         cfGrid = new VerticalLayout();

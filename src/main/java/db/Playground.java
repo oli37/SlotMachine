@@ -1,8 +1,6 @@
 package db;
 
 
-import application.CostFunction;
-
 /**
  * This class is for playing around with DB stuff
  * Do not use it for something else
@@ -11,6 +9,12 @@ public class Playground {
     public static void main(String[] args) {
 
 
+        ProposalServiceProvider psp = new ProposalServiceProvider();
+        var a = psp.fetchByFlightID(121);
+        a.forEach(System.out::println);
+
+
+/*
         CostFunctionServiceProvider cfsp = new CostFunctionServiceProvider();
         cfsp.post(new CostFunction("3362s136", -100, 0, 300.5, 44, 700, 1200));
 
@@ -19,7 +23,7 @@ public class Playground {
 
         var list = cfsp.fetch(1, 50);
         list.stream().map(x -> x.getName()).forEach(System.out::println);
-/*
+
         ProposalServiceProvider asp = new ProposalServiceProvider();
         var inittime = LocalDateTime.now();
         var destime = inittime.plusMinutes(120);

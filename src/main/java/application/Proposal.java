@@ -67,7 +67,7 @@ public class Proposal {
     public String toString() {
         return "Proposal{" +
                 "auctionID=" + auctionID +
-                ", flightID1=" + flightID +
+                ", flightID=" + flightID +
                 ", price=" + price +
                 ", isBid=" + isBid +
                 ", initialTime=" + initialTime +
