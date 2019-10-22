@@ -1,0 +1,16 @@
+maxFlightsPerSlot(1).
+slot(s1). slot(s2). slot(s3).
+
+% CONSTRAINT:
+% THERE ARE ONLY maxFlightsPerSlot FLIGHTS PER SLOT
+:- maxFlightsPerSlot(N), slot(S), #count{F: fsp(F,S,P)} > N.
+
+% WEAK CONSTRAINT FOR MINIMIZING THE NORMALIZED PRICE (MAXIMIZING THE SURPLUS)
+:~ fsp(F,S,P). [P:1]
+
+% NORMALIZED BIDS/ASKS/CURRENTALLOCATION
+fsp(f1,s1,0) v fsp(f1,s2,200) v fsp(f1,s3,400).
+fsp(f2,s1,0) v fsp(f2,s2,450) v fsp(f2,s3,460).
+fsp(f3,s1,0) v fsp(f3,s2,20) v fsp(f3,s3,400).
+
+

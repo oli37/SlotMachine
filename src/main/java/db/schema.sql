@@ -68,3 +68,11 @@ t5 real not null,
 t6 real not null,
 primary key(cf_name)
 );
+
+create table if not exists slotmachine.user(
+username varchar (255),
+pw varchar (255),
+role varchar(10) not null,
+primary key (username),
+check (role in ('admin', 'nwmgmt', 'airline'))
+);

@@ -214,19 +214,19 @@ public class ProposalView extends FlexLayout {
     private void applyCF() {
 
         costFunctionProposal.removeAll();
-        costFunctionProposal.setWidth("750px");
+        costFunctionProposal.setWidth("742px");
 
         var strListCfNames = cfsp.fetchAll().stream().map(CostFunction::getName).collect(Collectors.toList());
 
         ComboBox<String> costFunctionComboBox = new ComboBox<>();
         costFunctionComboBox.setItems(strListCfNames);
-        costFunctionComboBox.setWidth("200%");
+        costFunctionComboBox.setWidth("424px");
         costFunctionComboBox.setValue("Select Cost Function");
 
         Button applyFunctionButton = new Button("Apply Function");
         applyFunctionButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
         applyFunctionButton.getStyle().set("background-color", "#E74C3C");
-        applyFunctionButton.setWidth("150%");
+        applyFunctionButton.setWidth("302px");
 
         costFunctionProposal.add(costFunctionComboBox, applyFunctionButton);
 
