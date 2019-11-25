@@ -71,8 +71,22 @@ primary key(cf_name)
 
 create table if not exists slotmachine.user(
 username varchar (255),
-pw varchar (255),
+pwhash varchar (255) not null,
 role varchar(10) not null,
+airline varchar (3),
 primary key (username),
-check (role in ('admin', 'nwmgmt', 'airline'))
+foreign key (airline) references slotmachine.airline(airline_alias),
+check (role in ('ADMIN', 'NWMGMT', 'AIRLINE')),
+check ((airline is not null and role in ('AIRLINE')) or (airline is null and role not in ('AIRLINE')))
 );
+
+--some test users, PW:1234
+insert into slotmachine.user values ('Hans', '03ac674216f3e15c761ee1a5e255f067953623c8b388b4459e13f978d7c846f4', 'ADMIN');
+insert into slotmachine.user values ('Anna', '03ac674216f3e15c761ee1a5e255f067953623c8b388b4459e13f978d7c846f4', 'NWMGMT');
+insert into slotmachine.user values ('Susi', '03ac674216f3e15c761ee1a5e255f067953623c8b388b4459e13f978d7c846f4', 'AIRLINE', 'AMG');
+insert into slotmachine.user values ('Joko', '03ac674216f3e15c761ee1a5e255f067953623c8b388b4459e13f978d7c846f4', 'AIRLINE', '000');
+insert into slotmachine.user values ('Fynn', '03ac674216f3e15c761ee1a5e255f067953623c8b388b4459e13f978d7c846f4', 'AIRLINE', 'AAA');
+
+--should NOT WORK
+insert into slotmachine.user values ('Sepp', '03ac674216f3e15c761ee1a5e255f067953623c8b388b4459e13f978d7c846f4', 'AIRLINE');
+insert into slotmachine.user values ('Lola', '03ac674216f3e15c761ee1a5e255f067953623c8b388b4459e13f978d7c846f4', 'NWMGMT', 'AAA');

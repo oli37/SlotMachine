@@ -1,13 +1,17 @@
 package webapp;
 
+import application.UserLogin;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.html.H4;
+import com.vaadin.flow.component.html.H6;
 import com.vaadin.flow.component.html.Image;
+import com.vaadin.flow.component.html.Label;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.router.Route;
 import com.vaadin.flow.server.InputStreamFactory;
 import com.vaadin.flow.server.StreamResource;
+import com.vaadin.flow.server.VaadinSession;
 
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
@@ -15,7 +19,7 @@ import java.io.FileNotFoundException;
 /**
  * The main view of the application
  */
-@Route("")
+@Route("main")
 
 public class MainView extends VerticalLayout {
 
@@ -62,15 +66,62 @@ public class MainView extends VerticalLayout {
         sideMenu.setWidth("15%");
         sideMenu.setSpacing(false);
 
+        //Retrieve user information from session
+        VaadinSession vaadinSession = VaadinSession.getCurrent();
+        var ul = vaadinSession.getAttribute(UserLogin.class);
 
-        sideMenu.add(createMenuOption("Dashboard"),
+        //Show current user information from session
+        VerticalLayout footer = new VerticalLayout();
+        var user = new H6(ul.getUserName() + "  (" + ul.getRole().toString() + ")");
+        var airline = new H6(ul.getAirlineAlias());
+        user.getStyle().set("color", "white");
+        if(!ul.getAirlineAlias().equals("NULL"))
+            footer.add(airline);
+        footer.add(user);
+        footer.setJustifyContentMode(JustifyContentMode.CENTER);
+        footer.setWidth("100%");
+
+        VerticalLayout filler = new VerticalLayout();
+        filler.setSizeFull();
+
+/*        switch (ul.getRole()) {
+            case ADMIN:
+                sideMenu.add(
+                        createMenuOption("Admin"),
+                        createMenuOption("Flights"),
+                        createMenuOption("Bid/Ask"),
+                        createMenuOption("Cost Function"),
+                        filler,
+                        footer);
+                break;
+            case NWMGMT:
+                sideMenu.add(
+                        createMenuOption("Flights"),
+                        createMenuOption("Bid/Ask"),
+                        createMenuOption("Cost Function"),
+                        filler,
+                        footer);
+                break;
+            case AIRLINE:
+                sideMenu.add(
+                        createMenuOption("Flights"),
+                        createMenuOption("Bid/Ask"),
+                        createMenuOption("Cost Function"),
+                        filler,
+                        footer);
+        }*/
+
+        sideMenu.add(
+                createMenuOption("Admin"),
                 createMenuOption("Flights"),
                 createMenuOption("Bid/Ask"), //called Proposal
-                createMenuOption("Cost Function"));
+                createMenuOption("Cost Function"),
+                filler,
+                footer);
+
 
         sideMenu.setAlignItems(Alignment.CENTER);
         sideMenu.getStyle().set("background-color", "#E74C3C");
-
 
         // Compose layout
         center.add(sideMenu, content);
@@ -83,12 +134,14 @@ public class MainView extends VerticalLayout {
 
         Button menuButton = new Button(title);
         menuButton.setWidth("100%");
+        menuButton.setHeight("10%");
+        menuButton.setMinHeight("40px");
         menuButton.setClassName(title);
         menuButton.getStyle().set("color", "black");
         menuButton.getStyle().set("background-color", "white");
 
         //TODO: Do it right
-        if (title.equals("Dashboard")) menuButton.addClickListener(ev -> content.drawDashboard());
+        if (title.equals("Admin")) menuButton.addClickListener(ev -> content.drawAdmin());
         if (title.equals("Flights")) menuButton.addClickListener(ev -> content.drawFlights());
         if (title.equals("Cost Function")) menuButton.addClickListener(ev -> content.drawCostFunction());
         if (title.equals("Bid/Ask")) menuButton.addClickListener(ev -> content.drawProposal());

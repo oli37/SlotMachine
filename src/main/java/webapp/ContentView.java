@@ -8,11 +8,11 @@ import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 public class ContentView extends HorizontalLayout {
 
 
-    public void drawDashboard() {
+    public void drawAdmin() {
         removeAll();
-        VerticalLayout dashboard = new VerticalLayout();
-        dashboard.add(new H6("DASHBOARD"));
-        add(dashboard);
+        VerticalLayout admin = new VerticalLayout();
+        admin.add(new H6("ADMIN"));
+        add(admin);
     }
 
     public void drawFlights() {

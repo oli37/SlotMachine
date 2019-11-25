@@ -1,6 +1,9 @@
 package db;
 
 
+import application.UserLogin;
+import utils.Utility;
+
 /**
  * This class is for playing around with DB stuff
  * Do not use it for something else
@@ -9,10 +12,7 @@ public class Playground {
     public static void main(String[] args) {
 
 
-        ProposalServiceProvider psp = new ProposalServiceProvider();
-        var a = psp.fetchByFlightID(121);
-        a.forEach(System.out::println);
-
+        System.out.println(Utility.hash("1234"));
 
 /*
         CostFunctionServiceProvider cfsp = new CostFunctionServiceProvider();

@@ -155,14 +155,14 @@ public class FlightView extends FlexLayout {
 
         newFlight.setWidth("35%");
         newFlight.getStyle().set("margin-right", "25px");
-        newFlight.add(airlineSelect);
-        newFlight.add(departureAirportSelect);
-        newFlight.add(destinationAirportSelect);
-        newFlight.add(departureDatePicker);
-        newFlight.add(departureTimePicker);
-        newFlight.add(destinationDatePicker);
-        newFlight.add(destinationTimePicker);
-        newFlight.add(commitButton);
+        newFlight.add(airlineSelect,
+                departureAirportSelect,
+                destinationAirportSelect,
+                departureDatePicker,
+                departureTimePicker,
+                destinationDatePicker,
+                destinationTimePicker,
+                commitButton);
 
         add(flightGrid);
         add(newFlight);
