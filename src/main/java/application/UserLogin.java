@@ -61,6 +61,10 @@ public class UserLogin {
     public void setAirlineAlias(String airlineAlias) {
         this.airlineAlias = airlineAlias;
     }
+
+    public boolean isAirline() {
+        return role.equals(Role.AIRLINE);
+    }
 }
 
 ;

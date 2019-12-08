@@ -1,5 +1,6 @@
 package webapp;
 
+import application.Role;
 import application.UserLogin;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.html.H4;
@@ -72,47 +73,38 @@ public class MainView extends VerticalLayout {
 
         //Show current user information from session
         VerticalLayout footer = new VerticalLayout();
-        var user = new H6(ul.getUserName() + "  (" + ul.getRole().toString() + ")");
-        var airline = new H6(ul.getAirlineAlias());
+        H6 user;
+
+        if (ul.isAirline()) {
+            user = new H6(ul.getUserName() + "  (AIRLINE: " + ul.getAirlineAlias() + ")");
+        } else {
+            user = new H6(ul.getUserName() + "  (" + ul.getRole().toString() + ")");
+
+        }
+
+        user.getStyle().set("text-align", "center");
+
+        Button logoutButton = new Button("Logout");
+        logoutButton.setWidth("100%");
+        logoutButton.setMinHeight("20px");
+        logoutButton.getStyle().set("color", "white");
+        logoutButton.getStyle().set("background-color", "#5D6D7E");
+
+        logoutButton.addClickListener(ev -> {
+            vaadinSession.close();
+            getUI().ifPresent(ui -> ui.navigate(""));
+        });
+
         user.getStyle().set("color", "white");
-        if(!ul.getAirlineAlias().equals("NULL"))
-            footer.add(airline);
-        footer.add(user);
+        footer.add(user, logoutButton);
         footer.setJustifyContentMode(JustifyContentMode.CENTER);
         footer.setWidth("100%");
 
         VerticalLayout filler = new VerticalLayout();
         filler.setSizeFull();
 
-/*        switch (ul.getRole()) {
-            case ADMIN:
-                sideMenu.add(
-                        createMenuOption("Admin"),
-                        createMenuOption("Flights"),
-                        createMenuOption("Bid/Ask"),
-                        createMenuOption("Cost Function"),
-                        filler,
-                        footer);
-                break;
-            case NWMGMT:
-                sideMenu.add(
-                        createMenuOption("Flights"),
-                        createMenuOption("Bid/Ask"),
-                        createMenuOption("Cost Function"),
-                        filler,
-                        footer);
-                break;
-            case AIRLINE:
-                sideMenu.add(
-                        createMenuOption("Flights"),
-                        createMenuOption("Bid/Ask"),
-                        createMenuOption("Cost Function"),
-                        filler,
-                        footer);
-        }*/
-
+        if (ul.getRole().equals(Role.ADMIN)) sideMenu.add(createMenuOption("Admin"));
         sideMenu.add(
-                createMenuOption("Admin"),
                 createMenuOption("Flights"),
                 createMenuOption("Bid/Ask"), //called Proposal
                 createMenuOption("Cost Function"),

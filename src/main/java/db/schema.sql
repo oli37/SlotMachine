@@ -88,5 +88,5 @@ insert into slotmachine.user values ('Joko', '03ac674216f3e15c761ee1a5e255f06795
 insert into slotmachine.user values ('Fynn', '03ac674216f3e15c761ee1a5e255f067953623c8b388b4459e13f978d7c846f4', 'AIRLINE', 'AAA');
 
 --should NOT WORK
-insert into slotmachine.user values ('Sepp', '03ac674216f3e15c761ee1a5e255f067953623c8b388b4459e13f978d7c846f4', 'AIRLINE');
-insert into slotmachine.user values ('Lola', '03ac674216f3e15c761ee1a5e255f067953623c8b388b4459e13f978d7c846f4', 'NWMGMT', 'AAA');
+--insert into slotmachine.user values ('Sepp', '03ac674216f3e15c761ee1a5e255f067953623c8b388b4459e13f978d7c846f4', 'AIRLINE');
+--insert into slotmachine.user values ('Lola', '03ac674216f3e15c761ee1a5e255f067953623c8b388b4459e13f978d7c846f4', 'NWMGMT', 'AAA');

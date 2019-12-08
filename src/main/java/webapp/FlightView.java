@@ -3,6 +3,7 @@ package webapp;
 import application.Airline;
 import application.Airport;
 import application.Flight;
+import application.UserLogin;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.combobox.ComboBox;
 import com.vaadin.flow.component.datepicker.DatePicker;
@@ -14,6 +15,7 @@ import com.vaadin.flow.component.orderedlayout.FlexLayout;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.component.timepicker.TimePicker;
 import com.vaadin.flow.data.provider.DataProvider;
+import com.vaadin.flow.server.VaadinSession;
 import db.AirlineServiceProvider;
 import db.AirportServiceProvider;
 import db.DbManager;
@@ -48,18 +50,27 @@ public class FlightView extends FlexLayout {
         //Table of flights
         flightGrid.add(new H6("FLIGHTS"));
 
+
+        VaadinSession vaadinSession = VaadinSession.getCurrent();
+        var ul = vaadinSession.getAttribute(UserLogin.class);
         FlightServiceProvider flsp = new FlightServiceProvider();
-        DataProvider<Flight, Void> dataProviderFlight = DataProvider.fromCallbacks(
-                query -> {
-                    int offset = query.getOffset();
-                    int limit = query.getLimit();
-                    return flsp.fetch(offset, limit).stream();
-                },
-                query -> flsp.getCount());
-
-
+        DataProvider<Flight, Void> dataProviderFlight;
         Grid<Flight> grid = new Grid<>();
-        grid.setDataProvider(dataProviderFlight);
+
+        if (ul.isAirline()) {
+            grid.setItems(flsp.fetchByAirline(ul.getAirlineAlias()));
+
+        } else {
+            dataProviderFlight = DataProvider.fromCallbacks(
+                    query -> {
+                        int offset = query.getOffset();
+                        int limit = query.getLimit();
+                        return flsp.fetch(offset, limit).stream();
+                    },
+                    query -> flsp.getCount());
+            grid.setDataProvider(dataProviderFlight);
+        }
+
 
         grid.addColumn(flight -> flight.getAirline().getAlias()).setHeader("Airline");
         grid.addColumn(flight -> flight.getDepartureAirport().getAlias()).setHeader("Departure Airport");
@@ -150,12 +161,20 @@ public class FlightView extends FlexLayout {
             ) Notification.show("Flight added").setPosition(Notification.Position.BOTTOM_START);
 
             grid.getDataProvider().refreshAll();
+            grid.setItems(flsp.fetchByAirline(ul.getAirlineAlias()));
         });
 
 
         newFlight.setWidth("35%");
         newFlight.getStyle().set("margin-right", "25px");
-        newFlight.add(airlineSelect,
+
+        //Add airline select only for admin and nwmgmt
+        if (ul.isAirline())
+            airline.set(ul.getAirlineAlias());
+        else
+            newFlight.add(airlineSelect);
+
+        newFlight.add(
                 departureAirportSelect,
                 destinationAirportSelect,
                 departureDatePicker,

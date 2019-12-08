@@ -1,9 +1,7 @@
 package webapp;
 
-import application.Airline;
-import application.CostFunction;
-import application.Flight;
-import application.Proposal;
+import application.*;
+import com.vaadin.flow.component.UI;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.button.ButtonVariant;
 import com.vaadin.flow.component.combobox.ComboBox;
@@ -16,6 +14,7 @@ import com.vaadin.flow.component.orderedlayout.FlexLayout;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.component.textfield.NumberField;
+import com.vaadin.flow.server.VaadinSession;
 import db.AirlineServiceProvider;
 import db.CostFunctionServiceProvider;
 import db.FlightServiceProvider;
@@ -56,12 +55,14 @@ public class ProposalView extends FlexLayout {
         psp = new ProposalServiceProvider();
         cfsp = new CostFunctionServiceProvider();
         var airlines = alsp.fetchAll().stream().map(Airline::getAlias).collect(Collectors.toList());
+        VaadinSession vaadinSession = VaadinSession.getCurrent();
+        var ul = vaadinSession.getAttribute(UserLogin.class);
+
 
         Label airlineLabel = new Label("Select Airline:");
         airlineLabel.getStyle().set("margin-top", "auto");
         airlineLabel.getStyle().set("margin-bottom", "auto");
         airlineLabel.getStyle().set("margin-left", "var(--lumo-space-m)");
-
         airlineLabel.setWidth("200%");
 
         ComboBox<String> airlineCombobox = new ComboBox<>();
@@ -112,10 +113,15 @@ public class ProposalView extends FlexLayout {
         flightGrid.setHeight("100%");
         proposalGrid.setHeight("100%");
 
+        if(ul.isAirline()) {
+            var items = flsp.fetchByAirline(ul.getAirlineAlias());
+            flightGrid.setItems(items);
+        }else { //ADMIN & NWMGMT
+            airlineSelection.add(airlineLabel, airlineCombobox);
+        }
 
         gridContainer.add(flightGrid, proposalGrid);
-        airlineSelection.add(airlineLabel, airlineCombobox);
-        subComponent.add(new H6("AUCTION"),
+        subComponent.add(new H6("ASK/BID"),
                 airlineSelection,
                 gridContainer,
                 singleProposal,
