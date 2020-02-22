@@ -21,16 +21,14 @@ import db.AirportServiceProvider;
 import db.DbManager;
 import db.FlightServiceProvider;
 
-import java.time.LocalDate;
-import java.time.LocalDateTime;
-import java.time.LocalTime;
+import java.time.*;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Collectors;
 
 public class FlightView extends FlexLayout {
 
-    public FlexComponent draw() {
+    public FlexComponent<FlexLayout> draw() {
 
         DbManager dbManager = new DbManager();
         var flist = dbManager.getAllFlights();
@@ -87,8 +85,8 @@ public class FlightView extends FlexLayout {
         AirlineServiceProvider alsp = new AirlineServiceProvider();
         AirportServiceProvider apsp = new AirportServiceProvider();
 
-        List<String> airlines = alsp.fetchAll().stream().map(Airline::getAlias).collect(Collectors.toList());
-        List<String> airports = apsp.fetchAll().stream().map(Airport::getAlias).collect(Collectors.toList());
+        List<String> airlines = alsp.fetch().stream().map(Airline::getAlias).collect(Collectors.toList());
+        List<String> airports = apsp.fetch().stream().map(Airport::getAlias).collect(Collectors.toList());
 
         //Adding new Flight
         newFlight.add(new H6("ADD NEW FLIGHT"));
@@ -153,15 +151,20 @@ public class FlightView extends FlexLayout {
         commitButton.getStyle().set("margin-top", "50px");
         commitButton.addClickListener(event -> {
 
-            if (flsp.post(airline.get(),
-                    depAirport.get(),
-                    desAirport.get(),
-                    LocalDateTime.of(depDate.get(), depTime.get()),
-                    LocalDateTime.of(desDate.get(), desTime.get()))
+
+            var flight = new Flight(apsp.fetch(depAirport.get()),
+                    apsp.fetch(desAirport.get()),
+                    alsp.fetch(airline.get()),
+                    OffsetDateTime.of(depDate.get(), depTime.get(), ZoneOffset.UTC),
+                    OffsetDateTime.of(desDate.get(), desTime.get(), ZoneOffset.UTC)
+            );
+
+
+            if (flsp.post(flight)
             ) Notification.show("Flight added").setPosition(Notification.Position.BOTTOM_START);
 
-            grid.getDataProvider().refreshAll();
             grid.setItems(flsp.fetchByAirline(ul.getAirlineAlias()));
+            grid.getDataProvider().refreshAll();
         });
 
 

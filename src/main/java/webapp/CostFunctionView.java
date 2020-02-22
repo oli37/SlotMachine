@@ -1,6 +1,7 @@
 package webapp;
 
 import application.CostFunction;
+import application.UserLogin;
 import com.github.appreciated.apexcharts.ApexCharts;
 import com.github.appreciated.apexcharts.config.builder.ChartBuilder;
 import com.github.appreciated.apexcharts.config.builder.DataLabelsBuilder;
@@ -10,27 +11,38 @@ import com.github.appreciated.apexcharts.config.chart.Type;
 import com.github.appreciated.apexcharts.config.chart.builder.AnimationsBuilder;
 import com.github.appreciated.apexcharts.config.plotoptions.builder.BarBuilder;
 import com.github.appreciated.apexcharts.helper.Series;
-import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.grid.Grid;
 import com.vaadin.flow.component.html.H6;
-import com.vaadin.flow.component.notification.Notification;
 import com.vaadin.flow.component.orderedlayout.FlexLayout;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.component.textfield.NumberField;
-import com.vaadin.flow.component.textfield.TextField;
 import com.vaadin.flow.data.provider.DataProvider;
+import com.vaadin.flow.server.VaadinSession;
 import db.CostFunctionServiceProvider;
 import utils.Utility;
+
+import java.util.ArrayList;
+import java.util.LinkedList;
+import java.util.List;
 
 
 public class CostFunctionView extends FlexLayout {
 
-    private Series series;
     private ApexCharts cfChart;
     private VerticalLayout cfView;
     private VerticalLayout cfGrid;
-    private HorizontalLayout confirmationView;
+    private VerticalLayout cfValues;
+    private VerticalLayout sidebar;
+    private HorizontalLayout valueChanger;
+
+    private int from = -15, to = 60;
+    private Series<Integer> dataSeries = new Series<>(); //Series version of data
+    private List<Integer> data = new LinkedList<>();
+    private List<String> labels = new LinkedList<>();
+    VaadinSession vaadinSession = VaadinSession.getCurrent();
+    UserLogin ul = vaadinSession.getAttribute(UserLogin.class);
+
 
     public FlexLayout draw() {
 
@@ -38,77 +50,23 @@ public class CostFunctionView extends FlexLayout {
         cfView.add(new H6("COST FUNCTION"));
 
         cfView.getStyle().set("justify-content", "space-between");
-        cfView.getStyle().set("align-items", "center");
+        cfView.getStyle().set("align-items", "left");
+        cfView.setHeight("100%");
+        cfView.setMinWidth("880px");
+        cfView.setWidth("70%");
 
-        series = new Series(-100, 0, 100, 200, 300, 400); //needed for representation in chart
-        var cf = new CostFunction("Unnamed", -100, 0, 100, 200, 300, 400); //needed for representation in DB
+        valueChanger = getValueChanger(from, to);
+        cfView.add(valueChanger);
+        cfChart = getChart(from, to);
+        cfView.add(cfChart);
 
-        series.setName("Cost Function");
-        this.cfChart = getChart(series);
-        var editView = new HorizontalLayout();
-
-        NumberField t1 = new NumberField();
-        t1.setHasControls(true);
-        t1.setStep(50);
-        t1.setLabel("-15 min");
-        t1.setValue(-100d);
-
-        NumberField t2 = new NumberField();
-        t2.setHasControls(true);
-        t2.setStep(50);
-        t2.setLabel("0 min");
-        t2.setValue(0d);
-
-        NumberField t3 = new NumberField();
-        t3.setHasControls(true);
-        t3.setStep(50);
-        t3.setLabel("+15 min");
-        t3.setValue(100d);
-
-        NumberField t4 = new NumberField();
-        t4.setHasControls(true);
-        t4.setStep(50);
-        t4.setLabel("+30 min");
-        t4.setValue(200d);
-
-        NumberField t5 = new NumberField();
-        t5.setHasControls(true);
-        t5.setStep(50);
-        t5.setLabel("+45 min");
-        t5.setValue(300d);
-
-        NumberField t6 = new NumberField();
-        t6.setHasControls(true);
-        t6.setStep(50);
-        t6.setLabel("+60 min");
-        t6.setValue(400d);
-
-        t1.addValueChangeListener(event -> {
-            updateBarChart(0, t1.getValue());
-            cf.setT1(t1.getValue());
-        });
-        t2.addValueChangeListener(event -> {
-            updateBarChart(1, t2.getValue());
-            cf.setT2(t2.getValue());
-        });
-        t3.addValueChangeListener(event -> {
-            updateBarChart(2, t3.getValue());
-            cf.setT3(t3.getValue());
-        });
-        t4.addValueChangeListener(event -> {
-            updateBarChart(3, t4.getValue());
-            cf.setT4(t4.getValue());
-        });
-        t5.addValueChangeListener(event -> {
-            updateBarChart(4, t5.getValue());
-            cf.setT5(t5.getValue());
-        });
-        t6.addValueChangeListener(event -> {
-            updateBarChart(5, t6.getValue());
-            cf.setT6(t6.getValue());
-        });
+        sidebar = getSidebar();
 
 
+        add(cfView, sidebar);
+
+
+/*
         CostFunctionServiceProvider cfsp = new CostFunctionServiceProvider();
         DataProvider<CostFunction, Void> dataProviderCF = DataProvider.fromCallbacks(
                 query -> {
@@ -173,11 +131,92 @@ public class CostFunctionView extends FlexLayout {
         // cfGrid.getStyle().set("background-color", "#E74C3C");
         cfGrid.add(grid);
         add(cfView, cfGrid);
+        /*
+ */
         return this;
     }
 
 
-    private ApexCharts getChart(Series series) {
+    private VerticalLayout getSidebar() {
+
+        sidebar = new VerticalLayout();
+        cfGrid = new VerticalLayout();
+        cfValues = new VerticalLayout();
+        cfGrid.add(new H6("COST FUNCTIONS"));
+        cfGrid.setHeight("50%");
+        cfValues.add(new H6("VALUES"));
+        cfValues.setHeight("50%");
+
+        CostFunctionServiceProvider cfsp = new CostFunctionServiceProvider();
+        List<String> items = cfsp.fetch(ul.getAirlineAlias());
+
+        Grid<String> grid = new Grid<>();
+        grid.setItems(items);
+        grid.addColumn(x -> x).setHeader("CF Name");
+        cfGrid.add(grid);
+
+
+        sidebar.add(cfGrid, cfValues);
+
+        return sidebar;
+    }
+
+    private HorizontalLayout getValueChanger(int from, int to) {
+        valueChanger = new HorizontalLayout();
+        NumberField fromNF = new NumberField();
+        fromNF.setHasControls(true);
+        fromNF.setTitle("from");
+        fromNF.setValue(-15d);
+        fromNF.setStep(15);
+
+        NumberField toNF = new NumberField();
+        toNF.setHasControls(true);
+        toNF.setTitle("to");
+        toNF.setValue(60d);
+        toNF.setStep(15);
+
+        fromNF.addValueChangeListener(event -> {
+            this.from = event.getValue().intValue();
+            var temp = getChart(this.from, this.to);
+            this.cfView.replace(this.cfChart, temp);
+            this.cfChart = temp;
+
+        });
+
+        toNF.addValueChangeListener(event -> {
+            this.to = event.getValue().intValue();
+            var temp = getChart(this.from, this.to);
+            this.cfView.replace(this.cfChart, temp);
+            this.cfChart = temp;
+        });
+
+        valueChanger.setHeight("5%");
+        valueChanger.add(fromNF, toNF);
+        return valueChanger;
+
+    }
+
+    private ApexCharts getChart() {
+        return this.cfChart;
+    }
+
+    private ApexCharts getChart(int from, int to) {
+
+        int incr = 15;
+        this.labels = new LinkedList<>();
+        this.data = new LinkedList<>();
+        for (int i = from; i <= to; i += incr) {
+            this.data.add(100);
+            this.labels.add((i <= 0 ? "" : "+") + i + "min");
+        }
+        this.dataSeries.setData(data.toArray(Integer[]::new));
+        this.dataSeries.setName("Value");
+
+        return getChart(this.dataSeries, this.labels);
+
+    }
+
+    private ApexCharts getChart(Series<Integer> data, List<String> labels) {
 
         ApexCharts barChart = new ApexCharts()
                 .withChart(ChartBuilder.get()
@@ -196,34 +235,23 @@ public class CostFunctionView extends FlexLayout {
                 .withDataLabels(DataLabelsBuilder.get()
                         .withEnabled(true)
                         .build())
-                .withSeries(series)
+                .withSeries(data)
                 .withXaxis(XAxisBuilder.get()
-                        .withCategories("-15 min", "0 min", "+15 min", "+30 min", "+45 min", "+60min")
+                        .withCategories(labels)
                         .build());
 
         barChart.setWidth("100%");
-        barChart.setHeight("100%");
-
+        barChart.setHeight("95%"); //does strange things when set to 100%
 
         return barChart;
     }
 
-    private void updateBarChart(int pos, double val) {
-        series = Utility.changeSeries(series, pos, val);
-        series.setName("Value");
-        cfView.remove(this.cfChart);
-        cfChart = getChart(series);
-        cfView.add(cfChart);
-        cfView.add(confirmationView);
-    }
+    private void updateBarChart(int pos, int val) {
+        Series<Integer> newDataSeries = Utility.changeSeries(dataSeries, pos, val);
+        var newChart = getChart(newDataSeries, this.labels);
+        this.cfView.replace(this.cfChart, newChart);
+        this.cfChart = newChart;
 
-    private void updateBarChart(Series series) {
-        series.setName("Value");
-        cfView.remove(this.cfChart);
-        cfChart = getChart(series);
-        cfView.add(cfChart);
-        cfView.add(confirmationView);
     }
-
 }
 

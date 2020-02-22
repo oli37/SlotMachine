@@ -1,77 +1,62 @@
 package application;
 
-import java.time.LocalDateTime;
-
 public class Proposal {
-    private int auctionID;
-    private int flightID;
+    private int proposalID;
     private float price;
+    private int delay; //in minutes
     private boolean isBid; //else Ask
-    private LocalDateTime initialTime;
-    private LocalDateTime desiredTime;
 
+    public Proposal() {
+    }
 
-    public Proposal(int auctionID,
-                    int flightID,
-                    float price,
-                    boolean isBid,
-                    LocalDateTime initialTime,
-                    LocalDateTime desiredTime) {
-        this.auctionID = auctionID;
-        this.flightID = flightID;
+    public Proposal( float price, int delay, boolean isBid) {
         this.price = price;
+        this.delay = delay;
         this.isBid = isBid;
-        this.initialTime = initialTime;
-        this.desiredTime = desiredTime;
     }
 
-    public Proposal(int flightID,
-                    float price,
-                    boolean isBid,
-                    LocalDateTime initialTime,
-                    LocalDateTime desiredTime) {
-        this.auctionID = this.hashCode(); //temporary
-        this.flightID = flightID;
-        this.price = price;
-        this.isBid = isBid;
-        this.initialTime = initialTime;
-        this.desiredTime = desiredTime;
+
+    public int getProposalID() {
+        return proposalID;
     }
 
-    public int getAuctionID() {
-        return auctionID;
+    public void setProposalID(int proposalID) {
+        this.proposalID = proposalID;
     }
-
-    public int getFlightID() {
-        return flightID;
-    }
-
 
     public float getPrice() {
         return price;
+    }
+
+    public void setPrice(float price) {
+        this.price = price;
+    }
+
+    public int getDelay() {
+        return delay;
+    }
+
+    public void setDelay(int delay) {
+        this.delay = delay;
     }
 
     public boolean isBid() {
         return isBid;
     }
 
-    public LocalDateTime getInitialTime() {
-        return initialTime;
-    }
-
-    public LocalDateTime getDesiredTime() {
-        return desiredTime;
+    public void setBid(boolean bid) {
+        isBid = bid;
     }
 
     @Override
     public String toString() {
         return "Proposal{" +
-                "auctionID=" + auctionID +
-                ", flightID=" + flightID +
+                ", proposal_id=" + proposalID +
                 ", price=" + price +
+                ", delay=" + delay +
                 ", isBid=" + isBid +
-                ", initialTime=" + initialTime +
-                ", desiredTime=" + desiredTime +
                 '}';
     }
 }
+
+

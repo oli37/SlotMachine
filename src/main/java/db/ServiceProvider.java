@@ -2,15 +2,16 @@ package db;
 
 import java.util.List;
 
-public interface ServiceProvider {
+public interface ServiceProvider<E> {
 
-    //List<?> fetchSpecificAirline(String airlineAlias, int offset, int limit);
 
-    List<?> fetch(int offset, int limit);
+    List<E> fetch(int offset, int limit);
 
-    List<?> fetchAll();
+    List<E> fetch();
 
     int getCount();
+
+    boolean post(E element);
 
 
 }

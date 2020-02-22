@@ -2,7 +2,9 @@ package db;
 
 import application.Airline;
 import application.Airport;
+import application.CostFunction;
 import application.Flight;
+import org.checkerframework.checker.units.qual.C;
 
 import java.sql.*;
 import java.time.LocalDateTime;
@@ -14,6 +16,23 @@ import java.util.List;
 public class FlightServiceProvider implements ServiceProvider {
 
     private static Connection connection = null;
+    private String query = "SELECT f.flight_id, f.departuretime, f.destinationtime, \n" +
+            "al.airline_name, al.airline_alias, al.airline_country, \n" +
+            "ap_des.airport_name AS des_airport_name, ap_des.airport_alias AS des_airport_alias, " +
+            "ap_des.airport_city AS des_airport_city, ap_des.airport_country AS des_airport_country, " +
+            "des_city.utc_offset as des_airport_utcoffset,\n" +
+            "ap_dep.airport_name AS dep_airport_name, ap_dep.airport_alias AS dep_airport_alias, " +
+            "ap_dep.airport_city AS dep_airport_city, ap_dep.airport_country AS dep_airport_country, " +
+            "dep_city.utc_offset as dep_airport_utcoffset\n" +
+            "FROM slotmachine.flight f\n" +
+            "LEFT OUTER JOIN slotmachine.airline al ON f.airline = al.airline_alias\n" +
+            "LEFT OUTER JOIN slotmachine.airport ap_des ON f.destinationairport = ap_des.airport_alias\n" +
+            "LEFT OUTER JOIN slotmachine.airport ap_dep ON f.departureairport = ap_dep.airport_alias\n" +
+            "LEFT OUTER JOIN slotmachine.city dep_city ON ap_dep.airport_city = dep_city.city_name\n" +
+            "LEFT OUTER JOIN slotmachine.city des_city ON ap_des.airport_city = des_city.city_name\n";
+
+    private String postLink = "INSERT INTO slotmachine.cf_flight_attr (cf_name, flight_id) VALUES (?, ?)";
+    private CostFunctionServiceProvider cfsp = new CostFunctionServiceProvider();
 
     public FlightServiceProvider() {
         if (connection == null) FlightServiceProvider.connection = new DbManager().getConnection();
@@ -25,17 +44,10 @@ public class FlightServiceProvider implements ServiceProvider {
         List<Flight> flightList = new ArrayList<>();
 
         try {
-            String sqlFlight = "SELECT *\n" +
-                    "FROM slotmachine.flight f\n" +
-                    "LEFT OUTER JOIN slotmachine.airline al ON f.airline = al.airline_alias\n" +
-                    "LEFT OUTER JOIN slotmachine.airport ap_des ON f.destinationairport = ap_des.airport_alias\n" +
-                    "LEFT OUTER JOIN slotmachine.airport ap_dep ON f.departureairport = ap_dep.airport_alias\n" +
-                    "LEFT OUTER JOIN slotmachine.city dep_city ON ap_dep.airport_city = dep_city.city_name\n" +
-                    "LEFT OUTER JOIN slotmachine.city des_city ON ap_des.airport_city = des_city.city_name\n" +
-                    "ORDER BY al.airline_alias\n";
-            if (limit != 0) sqlFlight = sqlFlight + "OFFSET ? LIMIT ?";
 
-            pstmt = connection.prepareStatement(sqlFlight);
+            if (limit != 0) query = query + "OFFSET ? LIMIT ?";
+
+            pstmt = connection.prepareStatement(query);
             if (limit != 0) {
                 pstmt.setInt(1, offset);
                 pstmt.setInt(2, limit);
@@ -43,7 +55,27 @@ public class FlightServiceProvider implements ServiceProvider {
             ResultSet rs = pstmt.executeQuery();
 
             while (rs.next()) {
-                Flight f = getFlight(rs);
+                Flight f = unwrap(rs);
+                flightList.add(f);
+            }
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return flightList;
+    }
+
+    @Override
+    public List<Flight> fetch() {
+        PreparedStatement pstmt = null;
+        List<Flight> flightList = new ArrayList<>();
+
+        try {
+            pstmt = connection.prepareStatement(query);
+            ResultSet rs = pstmt.executeQuery();
+
+            while (rs.next()) {
+                Flight f = unwrap(rs);
                 flightList.add(f);
             }
 
@@ -58,22 +90,14 @@ public class FlightServiceProvider implements ServiceProvider {
         List<Flight> flightList = new ArrayList<>();
 
         try {
-            String sqlFlight = "SELECT *\n" +
-                    "FROM slotmachine.flight f\n" +
-                    "LEFT OUTER JOIN slotmachine.airline al ON f.airline = al.airline_alias\n" +
-                    "LEFT OUTER JOIN slotmachine.airport ap_des ON f.destinationairport = ap_des.airport_alias\n" +
-                    "LEFT OUTER JOIN slotmachine.airport ap_dep ON f.departureairport = ap_dep.airport_alias\n" +
-                    "LEFT OUTER JOIN slotmachine.city dep_city ON ap_dep.airport_city = dep_city.city_name\n" +
-                    "LEFT OUTER JOIN slotmachine.city des_city ON ap_des.airport_city = des_city.city_name\n" +
-                    "WHERE f.airline = ?\n" +
-                    "ORDER BY al.airline_alias\n";
+            String sqlFlight = query + "WHERE al.airline_alias = ? ";
 
             pstmt = connection.prepareStatement(sqlFlight);
             pstmt.setString(1, airlineAlias);
             ResultSet rs = pstmt.executeQuery();
 
             while (rs.next()) {
-                Flight f = getFlight(rs);
+                Flight f = unwrap(rs);
                 flightList.add(f);
             }
 
@@ -83,12 +107,6 @@ public class FlightServiceProvider implements ServiceProvider {
         return flightList;
 
     }
-
-    @Override
-    public List<Flight> fetchAll() {
-        return fetch(0, 0);
-    }
-
 
     @Override
     public int getCount() {
@@ -108,17 +126,31 @@ public class FlightServiceProvider implements ServiceProvider {
         return count;
     }
 
-    public boolean post(String airlineName, String depAirportName, String desAirportName, LocalDateTime depTime, LocalDateTime desTime) {
+    @Override
+    public boolean post(Object element) {
+        assert element instanceof Flight;
+        Flight f = (Flight) element;
+
         String sqlFlightPost = "INSERT INTO slotmachine.flight (departureairport, destinationairport, airline, departuretime, destinationtime)\n" +
                 "VALUES (?, ?, ?, ?, ?)";
+
         try {
             PreparedStatement pstm = connection.prepareStatement(sqlFlightPost);
-            pstm.setString(1, depAirportName);
-            pstm.setString(2, desAirportName);
-            pstm.setString(3, airlineName);
-            pstm.setTimestamp(4, Timestamp.valueOf(depTime));
-            pstm.setTimestamp(5, Timestamp.valueOf(desTime));
+            pstm.setString(1, f.getDepartureAirport().getAlias());
+            pstm.setString(2, f.getDestinationAirport().getAlias());
+            pstm.setString(3, f.getAirline().getAlias());
+            pstm.setTimestamp(4, Timestamp.valueOf(f.getDepartureTime().toLocalDateTime()));
+            pstm.setTimestamp(5, Timestamp.valueOf(f.getDestinationTime().toLocalDateTime()));
             pstm.executeUpdate();
+
+            f.setFlightID(getFlightID(f));
+
+            if (f.getCostFunctionList() != null) {
+                for (CostFunction cf : f.getCostFunctionList()) {
+                    cfsp.post(cf);
+                    link(cf, f);
+                }
+            }
         } catch (SQLException e) {
             e.printStackTrace();
             return false;
@@ -127,29 +159,28 @@ public class FlightServiceProvider implements ServiceProvider {
     }
 
 
-    private Flight getFlight(ResultSet rs) throws SQLException {
+    private Flight unwrap(ResultSet rs) throws SQLException {
 
-        int id = rs.getInt(1);
+        int id = rs.getInt("flight_id");
 
-        Timestamp departuretime = rs.getTimestamp(5);
-        Timestamp destinationtime = rs.getTimestamp(6);
+        Timestamp departuretime = rs.getTimestamp("departuretime");
+        Timestamp destinationtime = rs.getTimestamp("destinationtime");
 
-        String airlineName = rs.getString(7);
-        String airlineAlias = rs.getString(8);
-        String airlineCountry = rs.getString(9);
+        String airlineName = rs.getString("airline_name");
+        String airlineAlias = rs.getString("airline_alias");
+        String airlineCountry = rs.getString("airline_country");
 
-        String destinationAirportName = rs.getString(10);
-        String destinationAirportAlias = rs.getString(11);
-        String destinationAirportCity = rs.getString(12);
-        String destinationAirportCountry = rs.getString(13);
+        String destinationAirportName = rs.getString("des_airport_name");
+        String destinationAirportAlias = rs.getString("des_airport_alias");
+        String destinationAirportCity = rs.getString("des_airport_city");
+        String destinationAirportCountry = rs.getString("des_airport_country");
+        String destinationAirportTimeZoneOffset = rs.getString("des_airport_utcoffset");
 
-        String departureAirportName = rs.getString(14);
-        String departureAirportAlias = rs.getString(15);
-        String departureAirportCity = rs.getString(16);
-        String departureAirportCountry = rs.getString(17);
-
-        String departureAirportTimeZoneOffset = rs.getString(20);
-        String destinationAirportTimeZoneOffset = rs.getString(23);
+        String departureAirportName = rs.getString("dep_airport_name");
+        String departureAirportAlias = rs.getString("dep_airport_alias");
+        String departureAirportCity = rs.getString("dep_airport_city");
+        String departureAirportCountry = rs.getString("dep_airport_country");
+        String departureAirportTimeZoneOffset = rs.getString("dep_airport_utcoffset");
 
         Airline al = new Airline(airlineName, airlineAlias, airlineCountry);
         Airport apDep = new Airport(departureAirportName, departureAirportCity, departureAirportAlias, departureAirportCountry, departureAirportTimeZoneOffset);
@@ -158,6 +189,44 @@ public class FlightServiceProvider implements ServiceProvider {
         OffsetDateTime destinationTime = destinationtime.toLocalDateTime().atOffset(ZoneOffset.of(destinationAirportTimeZoneOffset));
 
         return new Flight(id, apDep, apDes, al, departureTime, destinationTime);
+    }
+
+    private boolean link(CostFunction cf, Flight f) {
+        try {
+            PreparedStatement pstmt = connection.prepareStatement(postLink);
+            pstmt.setString(1, cf.getName());
+            pstmt.setInt(2, f.getFlightID());
+            pstmt.executeUpdate();
+            return true;
+        } catch (Exception e) {
+            e.printStackTrace();
+            return false;
+        }
+    }
+
+    public int getFlightID(Flight flight) {
+        String flightIDQuery = "SELECT flight_id FROM slotmachine.flight WHERE departureairport = ? " +
+                "AND destinationairport = ? AND airline = ? AND departuretime = ? AND destinationtime = ?";
+        int flightID = 0;
+
+        try {
+            PreparedStatement pstm = connection.prepareStatement(flightIDQuery);
+
+            pstm.setString(1, flight.getDepartureAirport().getAlias());
+            pstm.setString(2, flight.getDestinationAirport().getAlias());
+            pstm.setString(3, flight.getAirline().getAlias());
+            pstm.setTimestamp(4, Timestamp.valueOf(flight.getDepartureTime().toLocalDateTime()));
+            pstm.setTimestamp(5, Timestamp.valueOf(flight.getDestinationTime().toLocalDateTime()));
+            ResultSet rs = pstm.executeQuery();
+
+            while (rs.next())
+                flightID = rs.getInt(1);
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+        return flightID;
     }
 
 

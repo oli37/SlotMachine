@@ -31,12 +31,9 @@ public class DbManager {
         } catch (SQLException ignore) {
             System.out.println("Connection failed");
         }
-
     }
 
-
     public Connection getConnection() {
-
         return connection;
     }
 
@@ -179,7 +176,6 @@ public class DbManager {
 
         return new Flight(apDep, apDes, al, departureTime, destinationTime);
     }
-
 
 
     /**

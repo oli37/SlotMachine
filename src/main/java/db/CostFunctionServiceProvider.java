@@ -1,122 +1,226 @@
 package db;
 
 import application.CostFunction;
+import application.Flight;
+import application.Proposal;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
-import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 
 public class CostFunctionServiceProvider implements ServiceProvider {
 
-
     private static Connection connection = null;
+    private String queryCFNames =
+            "SELECT cf_name " +
+                    "FROM  slotmachine.costfunction AS cf " +
+                    "ORDER BY cf.cf_name ";
+    private String queryCFNamesByOwner =
+            "SELECT cf_name " +
+                    "FROM  slotmachine.costfunction AS cf " +
+                    "WHERE cf.owner = ? " +
+                    "ORDER BY cf.cf_name ";
+    private String queryCF =
+            "SELECT prp.ask, prp.bid, prp.delay, prp.price, prp.proposal_id " +
+                    "FROM slotmachine.costfunction AS cf " +
+                    "JOIN slotmachine.proposal AS prp ON prp.cf = cf.cf_name " +
+                    "WHERE cf.cf_name = ? ";
+    private String count = "SELECT COUNT(*) FROM slotmachine.costfunction";
+    private String postCF = "INSERT INTO slotmachine.costfunction (cf_name, owner) VALUES (?, ?)";
+    private String postProp = "INSERT INTO slotmachine.proposal (price, delay, bid, ask, cf) VALUES (?, ?, ?, ?, ?)";
+
 
     public CostFunctionServiceProvider() {
         if (connection == null) CostFunctionServiceProvider.connection = new DbManager().getConnection();
     }
 
     @Override
-    public List<CostFunction> fetch(int offset, int limit) {
-        String sqlCostFunction = "SELECT * \n" +
-                "FROM  slotmachine.costfunction AS cf\n" +
-                "ORDER BY cf.cf_name\n";
+    public List<String> fetch(int offset, int limit) {
 
-        if (limit != 0) sqlCostFunction = sqlCostFunction + "offset ? limit ?";
-
+        queryCFNames = queryCFNames + "offset ? limit ?";
         PreparedStatement pstmt;
-        List<CostFunction> cfList = new ArrayList<>();
+        List<String> list = new ArrayList<>();
 
         try {
-            pstmt = connection.prepareStatement(sqlCostFunction);
-            if (limit != 0) {
-                pstmt.setInt(1, offset);
-                pstmt.setInt(2, limit);
-            }
-            ResultSet res = pstmt.executeQuery();
+            pstmt = connection.prepareStatement(queryCFNames);
+            pstmt.setInt(1, offset);
+            pstmt.setInt(2, limit);
 
-            while (res.next()) {
-                var cf = getCostFunction(res);
-                cfList.add(cf);
+            ResultSet rs = pstmt.executeQuery();
+
+            while (rs.next()) {
+                String name = rs.getString("cf_name");
+                list.add(name);
             }
 
             pstmt.close();
-            res.close();
+            rs.close();
         } catch (Exception e) {
             e.printStackTrace();
         }
-        return cfList;
+        return list;
     }
 
     @Override
-    public List<CostFunction> fetchAll() {
-        return fetch(0, 0);
+    public List<String> fetch() {
+        PreparedStatement pstmt;
+        List<String> list = new ArrayList<>();
+
+        try {
+            pstmt = connection.prepareStatement(queryCFNames);
+            ResultSet rs = pstmt.executeQuery();
+
+            while (rs.next()) {
+                String name = rs.getString("cf_name");
+                list.add(name);
+            }
+
+            pstmt.close();
+            rs.close();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return list;
+    }
+
+    public List<String> fetch(String owner) {
+
+        PreparedStatement pstmt;
+        List<String> list = new ArrayList<>();
+
+        try {
+            pstmt = connection.prepareStatement(queryCFNamesByOwner);
+            pstmt.setString(1, owner);
+
+            ResultSet rs = pstmt.executeQuery();
+
+            while (rs.next()) {
+                String name = rs.getString("cf_name");
+                list.add(name);
+            }
+
+            pstmt.close();
+            rs.close();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return list;
+    }
+
+
+    public CostFunction fetchCF(String cfName) {
+        PreparedStatement pstmt;
+        CostFunction cf = new CostFunction(cfName);
+        try {
+            pstmt = connection.prepareStatement(queryCF);
+            pstmt.setString(1, cfName);
+            ResultSet rs = pstmt.executeQuery();
+            cf.setName(cfName);
+
+            while (rs.next()) {
+                cf.addProposal(unwrap(rs));
+            }
+
+            pstmt = connection.prepareStatement(queryCF);
+
+            pstmt.close();
+            rs.close();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return cf;
     }
 
     @Override
     public int getCount() {
-        return fetchAll().size();
-    }
-
-    public List<CostFunction> fetchByCfName(String name) {
-        String sqlCostFunction = "SELECT * FROM slotmachine.costfunction WHERE cf_name = ? ";
-
         PreparedStatement pstmt;
-        List<CostFunction> cfList = new ArrayList<>();
-
+        int counter = 0;
         try {
-            pstmt = connection.prepareStatement(sqlCostFunction);
-            pstmt.setString(1, name);
-            ResultSet res = pstmt.executeQuery();
+            pstmt = connection.prepareStatement(count);
+            ResultSet rs = pstmt.executeQuery();
 
-            while (res.next()) {
-                var cf = getCostFunction(res);
-                cfList.add(cf);
+            while (rs.next()) {
+                counter = rs.getInt(1);
             }
 
             pstmt.close();
-            res.close();
+            rs.close();
         } catch (Exception e) {
             e.printStackTrace();
         }
-        return cfList;
+        return counter;
     }
 
+    @Override
+    public boolean post(Object element) {
+        assert element instanceof CostFunction;
+        CostFunction cf = (CostFunction) element;
 
-    public boolean post(CostFunction cf) {
 
-        String sqlCostFunctionPost = "INSERT INTO slotmachine.costfunction\n" +
-                "VALUES (?, ?, ?, ?, ?, ?, ?)";
+        List<String> list = new ArrayList<>();
+
         try {
-            PreparedStatement pstmt = connection.prepareStatement(sqlCostFunctionPost);
-            pstmt.setString(1, cf.getName());
-            pstmt.setDouble(2, cf.getT1());
-            pstmt.setDouble(3, cf.getT2());
-            pstmt.setDouble(4, cf.getT3());
-            pstmt.setDouble(5, cf.getT4());
-            pstmt.setDouble(6, cf.getT5());
-            pstmt.setDouble(7, cf.getT6());
-            pstmt.executeUpdate();
-        } catch (SQLException e) {
+            PreparedStatement pstmtCF = wrap(cf);
+            assert pstmtCF != null;
+            pstmtCF.executeUpdate();
+            pstmtCF.close();
+
+
+            for (Proposal p : cf.getProposalList()) {
+                PreparedStatement pstmtProp = wrap(p, cf.getName());
+                assert pstmtProp != null;
+                pstmtProp.executeUpdate();
+            }
+
+            return true;
+        } catch (Exception e) {
             e.printStackTrace();
             return false;
         }
-        return true;
     }
 
-    private CostFunction getCostFunction(ResultSet res) {
-        try {
-            String name = res.getString(1);
-            float t1 = res.getFloat(2);
-            float t2 = res.getFloat(3);
-            float t3 = res.getFloat(4);
-            float t4 = res.getFloat(5);
-            float t5 = res.getFloat(6);
-            float t6 = res.getFloat(7);
 
-            return new CostFunction(name, t1, t2, t3, t4, t5, t6);
+    private PreparedStatement wrap(CostFunction cf) {
+        try {
+            PreparedStatement pstmt = connection.prepareStatement(postCF);
+            pstmt.setString(1, cf.getName());
+            pstmt.setString(2, cf.getOwner());
+            return pstmt;
+        } catch (Exception e) {
+            e.printStackTrace();
+            return null;
+        }
+    }
+
+    private PreparedStatement wrap(Proposal prop, String cf) {
+        try {
+
+            PreparedStatement pstmt = connection.prepareStatement(postProp);
+            pstmt.setFloat(1, prop.getPrice());
+            pstmt.setInt(2, prop.getDelay());
+            pstmt.setBoolean(3, prop.isBid());
+            pstmt.setBoolean(4, !prop.isBid());
+            pstmt.setString(5, cf);
+
+            return pstmt;
+
+        } catch (Exception e) {
+            e.printStackTrace();
+            return null;
+        }
+    }
+
+    private Proposal unwrap(ResultSet rs) {
+        Proposal prop = new Proposal();
+        try {
+            prop.setProposalID(rs.getInt("proposal_id"));
+            prop.setPrice(rs.getFloat("price"));
+            prop.setDelay(rs.getInt("delay"));
+            prop.setBid(rs.getBoolean("bid"));
+
+            return prop;
         } catch (Exception e) {
             e.printStackTrace();
             return null;

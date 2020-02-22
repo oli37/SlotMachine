@@ -54,7 +54,7 @@ public class ProposalView extends FlexLayout {
         alsp = new AirlineServiceProvider();
         psp = new ProposalServiceProvider();
         cfsp = new CostFunctionServiceProvider();
-        var airlines = alsp.fetchAll().stream().map(Airline::getAlias).collect(Collectors.toList());
+        var airlines = alsp.fetch().stream().map(Airline::getAlias).collect(Collectors.toList());
         VaadinSession vaadinSession = VaadinSession.getCurrent();
         var ul = vaadinSession.getAttribute(UserLogin.class);
 
@@ -79,7 +79,7 @@ public class ProposalView extends FlexLayout {
         //flightGrid.addColumn(flight -> flight.getDestinationTime()).setHeader("Destination Time");
 
         proposalGrid = new Grid<>();
-        proposalGrid.addColumn(Proposal::getDesiredTime).setHeader("Proposed Time");
+        //proposalGrid.addColumn(Proposal::getDesiredTime).setHeader("Proposed Time");
         proposalGrid.addColumn(Proposal::getPrice).setHeader("Price");
         proposalGrid.addColumn(p -> p.isBid() ? "BID" : "ASK").setHeader("BID/ASK");
 
@@ -100,7 +100,7 @@ public class ProposalView extends FlexLayout {
 
         flightGrid.asSingleSelect().addValueChangeListener(event -> {
             text.setText(event.getValue().toString());
-            addProposal();
+            //addProposal();
             applyCF();
         });
 
@@ -180,12 +180,8 @@ public class ProposalView extends FlexLayout {
             double p = price.getValue();
             var psp = new ProposalServiceProvider();
 
-            var proposal = new Proposal(
-                    flightID,
-                    (float) p,
-                    isBid.get(),
-                    initialTime.toLocalDateTime(),
-                    initialTime.plusMinutes((long) d).toLocalDateTime());
+            var proposal = new Proposal();
+
 
             psp.post(proposal);
             var items = psp.fetchByFlightID(flightID);
@@ -222,7 +218,7 @@ public class ProposalView extends FlexLayout {
         costFunctionProposal.removeAll();
         costFunctionProposal.setWidth("742px");
 
-        var strListCfNames = cfsp.fetchAll().stream().map(CostFunction::getName).collect(Collectors.toList());
+        var strListCfNames = "";//cfsp.fetch().stream().map(CostFunction::getName).collect(Collectors.toList());
 
         ComboBox<String> costFunctionComboBox = new ComboBox<>();
         costFunctionComboBox.setItems(strListCfNames);
@@ -239,59 +235,12 @@ public class ProposalView extends FlexLayout {
         costFunctionComboBox.addValueChangeListener(event -> {
             String selected = event.getValue();
             System.out.println(selected);
-            cfByName = cfsp.fetchByCfName(selected).get(0); //only first one
+            //cfByName = cfsp.fetchByCfName(selected).get(0); //only first one
         });
 
         applyFunctionButton.addClickListener(event -> {
 
-            var p1 = new Proposal(
-                    flight.getFlightID(),
-                    (float) cfByName.getT1(),
-                    cfByName.getT1() > 0,
-                    flight.getDepartureTime().toLocalDateTime(),
-                    flight.getDepartureTime().minusMinutes(15).toLocalDateTime());
 
-            var p2 = new Proposal(
-                    flight.getFlightID(),
-                    (float) cfByName.getT2(),
-                    cfByName.getT2() > 0,
-                    flight.getDepartureTime().toLocalDateTime(),
-                    flight.getDepartureTime().toLocalDateTime());
-
-            var p3 = new Proposal(
-                    flight.getFlightID(),
-                    (float) cfByName.getT3(),
-                    cfByName.getT3() > 0,
-                    flight.getDepartureTime().toLocalDateTime(),
-                    flight.getDepartureTime().plusMinutes(15).toLocalDateTime());
-
-            var p4 = new Proposal(
-                    flight.getFlightID(),
-                    (float) cfByName.getT4(),
-                    cfByName.getT4() > 0,
-                    flight.getDepartureTime().toLocalDateTime(),
-                    flight.getDepartureTime().plusMinutes(30).toLocalDateTime());
-
-            var p5 = new Proposal(
-                    flight.getFlightID(),
-                    (float) cfByName.getT5(),
-                    cfByName.getT5() > 0,
-                    flight.getDepartureTime().toLocalDateTime(),
-                    flight.getDepartureTime().plusMinutes(45).toLocalDateTime());
-
-            var p6 = new Proposal(
-                    flight.getFlightID(),
-                    (float) cfByName.getT6(),
-                    cfByName.getT6() > 0,
-                    flight.getDepartureTime().toLocalDateTime(),
-                    flight.getDepartureTime().plusMinutes(60).toLocalDateTime());
-
-            psp.post(p1);
-            psp.post(p2);
-            psp.post(p3);
-            psp.post(p4);
-            psp.post(p5);
-            psp.post(p6);
 
             var items = psp.fetchByFlightID(flightID);
             proposalGrid.setItems(items);

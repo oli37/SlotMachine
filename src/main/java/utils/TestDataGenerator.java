@@ -140,7 +140,7 @@ public class TestDataGenerator {
      */
     public static int getRandomInRange(int min, int max) {
         int range = Math.abs(max - min) + 1;
-        return (int) (Math.random() * range) + (min <= max ? min : max);
+        return (int) (Math.random() * range) + (Math.min(min, max));
 
     }
 

@@ -17,7 +17,6 @@ public class LoginServiceProvider {
 
     public boolean isAuthenticated(UserLogin userLogin) {
 
-        //Do not use this in production, better would be bcrypt
         String user = userLogin.getUserName();
         String pwhash = userLogin.getPwHash();
         PreparedStatement pstmt = null;

@@ -87,11 +87,6 @@ public class Airport implements Cloneable {
         return utcOffset;
     }
 
-
-    public static void main(String[] args) {
-        var a = new Airport("name", "city", "alias", "country", "9");
-        System.out.println(ZoneOffset.of(a.getUtcOffset()));
-    }
 }
 
 

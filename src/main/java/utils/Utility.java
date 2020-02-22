@@ -11,13 +11,15 @@ import java.util.Arrays;
 public class Utility {
 
 
-    public static Series changeSeries(Series series, int pos, double value) {
+    public static Series<Integer> changeSeries(Series<Integer> series, int pos, int value) {
 
         assert pos < series.getData().length;
-        var old = series.getData();
+        Integer[] old = series.getData();
         old[pos] = value;
 
-        return new Series(old);
+        var newSeries = new Series<Integer>();
+        newSeries.setData(old);
+        return newSeries;
     }
 
     public static String hash(String str) {
