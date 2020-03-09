@@ -6,13 +6,13 @@ import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.html.H4;
 import com.vaadin.flow.component.html.H6;
 import com.vaadin.flow.component.html.Image;
-import com.vaadin.flow.component.html.Label;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.router.Route;
 import com.vaadin.flow.server.InputStreamFactory;
 import com.vaadin.flow.server.StreamResource;
 import com.vaadin.flow.server.VaadinSession;
+import db.LoginServiceProvider;
 
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
@@ -20,7 +20,7 @@ import java.io.FileNotFoundException;
 /**
  * The main view of the application
  */
-@Route("main")
+@Route("") //must be main
 
 public class MainView extends VerticalLayout {
 
@@ -70,6 +70,13 @@ public class MainView extends VerticalLayout {
         //Retrieve user information from session
         VaadinSession vaadinSession = VaadinSession.getCurrent();
         var ul = vaadinSession.getAttribute(UserLogin.class);
+
+        //Just for testing **********************************************************
+        //CHANGE ROUTE TO MAIN
+        LoginServiceProvider lsp = new LoginServiceProvider();
+        UserLogin userLogin = new UserLogin("Susi", "1234", lsp.getUserRole("Susi"), lsp.getAirline("Susi"));
+        vaadinSession.setAttribute(UserLogin.class, userLogin);
+        //***************************************************************************
 
         //Show current user information from session
         VerticalLayout footer = new VerticalLayout();

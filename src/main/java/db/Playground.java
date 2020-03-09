@@ -1,18 +1,8 @@
 package db;
 
 
-import application.*;
-import com.github.appreciated.apexcharts.helper.Series;
-import org.checkerframework.checker.units.qual.A;
-import org.checkerframework.checker.units.qual.C;
-import utils.Utility;
-
-import java.time.OffsetDateTime;
-import java.time.temporal.ChronoUnit;
-import java.time.temporal.TemporalUnit;
-import java.util.Arrays;
-import java.util.LinkedList;
-import java.util.List;
+import application.CostFunction;
+import application.Proposal;
 
 /**
  * This class is for playing around with DB stuff
@@ -27,8 +17,22 @@ public class Playground {
         AirportServiceProvider apsp = new AirportServiceProvider();
 
 
-        String a  ="Test";
+        CostFunction cf = new CostFunction();
 
+        for (int i=0; i<=120; i+=15){
+            Proposal p = new Proposal();
+            p.setPrice((int)(Math.random()*200));
+            p.setDelay(i);
+            p.setBid(false);
+            cf.addProposal(p);
+        }
+
+
+
+        cf.setName("JJJ");
+        cf.setOwner("AMG");
+
+        cfsp.post(cf);
 
         /*
         Airport departureAirport = apsp.fetch("AKA");
