@@ -1,7 +1,6 @@
 package webapp;
 
 import application.CostFunction;
-import application.Proposal;
 import application.UserLogin;
 import com.github.appreciated.apexcharts.ApexCharts;
 import com.github.appreciated.apexcharts.config.builder.ChartBuilder;
@@ -15,6 +14,8 @@ import com.github.appreciated.apexcharts.helper.Series;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.grid.Grid;
 import com.vaadin.flow.component.html.H6;
+import com.vaadin.flow.component.icon.Icon;
+import com.vaadin.flow.component.icon.VaadinIcon;
 import com.vaadin.flow.component.notification.Notification;
 import com.vaadin.flow.component.orderedlayout.FlexLayout;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
@@ -23,34 +24,32 @@ import com.vaadin.flow.component.textfield.NumberField;
 import com.vaadin.flow.component.textfield.TextField;
 import com.vaadin.flow.server.VaadinSession;
 import db.CostFunctionServiceProvider;
-import utils.Utility;
 
-import java.util.LinkedList;
 import java.util.List;
-import java.util.stream.Collectors;
 
 
 public class CostFunctionView extends FlexLayout {
 
-    private ApexCharts cfChart;
     private VerticalLayout cfView;
-    private VerticalLayout cfSelection;
-    private VerticalLayout cfValues;
     private VerticalLayout sidebar;
     private HorizontalLayout valueChanger;
+    private Grid<String> cfGrid;
+    private static int i = 0;
+
 
     private int from = -15, to = 60, incr = 15, stdPrice = 50;
-    private Series<Integer> dataSeries = new Series<>(); //Series version of data
-    private List<Integer> dadataList = new LinkedList<>();
-    private List<String> labelList = new LinkedList<>();
+
+    private CostFunction currentCostFunction;
+    private ApexCharts currentBarChart;
+    private Grid<String> currentPriceGrid;
+
+
     VaadinSession vaadinSession = VaadinSession.getCurrent();
     UserLogin ul = vaadinSession.getAttribute(UserLogin.class);
-    private Grid<String> grid;
     CostFunctionServiceProvider cfsp = new CostFunctionServiceProvider();
 
 
     public FlexLayout draw() {
-
 
         cfView = new VerticalLayout();
         cfView.add(new H6("COST FUNCTION"));
@@ -61,10 +60,12 @@ public class CostFunctionView extends FlexLayout {
         cfView.setMinWidth("880px");
         cfView.setWidth("200%");
 
-        valueChanger = renderValueChanger(from, to);
+        valueChanger = getValueChanger(from, to);
         cfView.add(valueChanger);
-        cfChart = renderEmptyBarChart(from, to);
-        cfView.add(cfChart);
+
+        currentCostFunction = new CostFunction("empty", "empty", from, to, incr, stdPrice);
+        currentBarChart = getBarChart(currentCostFunction);
+        cfView.add(currentBarChart);
 
         sidebar = getSidebar();
 
@@ -77,14 +78,15 @@ public class CostFunctionView extends FlexLayout {
     private VerticalLayout getSidebar() {
 
         sidebar = new VerticalLayout();
-        cfSelection = new VerticalLayout();
-        cfValues = new VerticalLayout();
+        VerticalLayout cfSelection = new VerticalLayout();
+        VerticalLayout cfValues = new VerticalLayout();
         cfSelection.add(new H6("COST FUNCTIONS"));
         cfValues.add(new H6("VALUES"));
 
-        grid = renderCfSelectionGrid();
-        cfSelection.add(grid);
-        cfValues.add(renderValueChangeGrid());
+        cfGrid = getCfSelectionGrid();
+        cfSelection.add(cfGrid);
+        currentPriceGrid = getPriceChangeGrid();
+        cfValues.add(currentPriceGrid);
         cfSelection.setHeight("50%");
         cfValues.setHeight("50%");
         sidebar.add(cfSelection, cfValues);
@@ -92,18 +94,39 @@ public class CostFunctionView extends FlexLayout {
         return sidebar;
     }
 
+    private Grid<String> getPriceChangeGrid() {
+        Grid<String> priceGrid = new Grid<>();
+        priceGrid.setItems(currentCostFunction.getLabelList());
+        priceGrid.addColumn(x -> x).setHeader("Delay");
 
-    private Grid<String> renderValueChangeGrid() {
-        Grid<String> valueGrid = new Grid<>();
-        valueGrid.setItems(this.labelList);
-        valueGrid.addColumn(x -> x).setHeader("Delay");
-        valueGrid.addComponentColumn(x -> new Button("TEST")).setHeader("Price");
-        valueGrid.setHeightFull();
-        return valueGrid;
+        i = 0;
+        priceGrid.addComponentColumn(x ->
+        {
+            var nf = new NumberField();
+            nf.setId(Integer.toString(i));
+            nf.setValue((double) currentCostFunction.getPriceList().get(i));
+            nf.setMin(0d);
+            nf.setSuffixComponent(new Icon(VaadinIcon.EURO));
+
+            nf.addValueChangeListener(cl -> {
+                int value = nf.getValue().intValue();
+                if (nf.getId().isPresent())
+                    i = Integer.parseInt(nf.getId().get());
+
+                currentCostFunction.setPrice(i, value);
+                updateBarChart(currentCostFunction);
+            });
+            i += 1;
+
+            return nf;
+        }).setHeader("Price");
+
+        i = 0;
+        priceGrid.setHeightFull();
+        return priceGrid;
     }
 
-
-    private Grid<String> renderCfSelectionGrid() {
+    private Grid<String> getCfSelectionGrid() {
 
         List<String> items = cfsp.fetch(ul.getAirlineAlias());
 
@@ -112,15 +135,19 @@ public class CostFunctionView extends FlexLayout {
         cfGrid.addColumn(x -> x).setHeader("CF Name");
 
         cfGrid.addSelectionListener(event -> {
+            assert event.getFirstSelectedItem().isPresent();
             String selection = event.getFirstSelectedItem().get();
-            changeBarChart(renderSelectedBarChart(selection));
+            currentCostFunction = cfsp.fetchCF(selection);
+            updateBarChart(currentCostFunction);
+            updatePriceChangerGrid(currentCostFunction);
+            updateCfSelectionGrid();
         });
 
         cfGrid.setHeightFull();
         return cfGrid;
     }
 
-    private HorizontalLayout renderValueChanger(int from, int to) {
+    private HorizontalLayout getValueChanger(int from, int to) {
         valueChanger = new HorizontalLayout();
         NumberField fromNF = new NumberField();
         fromNF.setHasControls(true);
@@ -144,42 +171,36 @@ public class CostFunctionView extends FlexLayout {
 
         fromNF.addValueChangeListener(event -> {
             this.from = event.getValue().intValue();
-            var newChart = renderEmptyBarChart(this.from, this.to);
-            changeBarChart(newChart);
+            var cf = new CostFunction("empty", "empty", this.from, this.to, incr, stdPrice);
+            updateBarChart(cf);
+            updatePriceChangerGrid(cf);
+            currentCostFunction = cf;
         });
 
         toNF.addValueChangeListener(event -> {
             this.to = event.getValue().intValue();
-            var newChart = renderEmptyBarChart(this.from, this.to);
-            changeBarChart(newChart);
+            var cf = new CostFunction("empty", "empty", this.from, this.to, incr, stdPrice);
+            updateBarChart(cf);
+            updatePriceChangerGrid(cf);
+            currentCostFunction = cf;
         });
-
 
 
         cfCreateButton.addClickListener(event -> {
-            var cfsp = new CostFunctionServiceProvider();
-            var cf = new CostFunction();
 
             if (cfName.getValue().equals("")) {
-                    Notification.show("CostFunction must not be empty").setPosition(Notification.Position.BOTTOM_START);
-                } else {
-                    cf.setName(cfName.getValue());
-                    cf.setOwner(ul.getAirlineAlias());
+                Notification.show("CostFunction must not be empty").setPosition(Notification.Position.BOTTOM_START);
+            } else {
+                currentCostFunction.setName(cfName.getValue());
+                currentCostFunction.setOwner(ul.getAirlineAlias());
 
-                    for (int i = from; i <= to; i += incr) {
-                        var prop = new Proposal();
-                        prop.setDelay(i);
-                        prop.setPrice(stdPrice);
-                        prop.setBid(true);
-                        cf.addProposal(prop);
-                    }
-                    cfsp.post(cf);
-                    Notification.show("CostFunction added").setPosition(Notification.Position.BOTTOM_START);
-                    changeBarChart(renderBarChart());
-                    updateGrid();
-                }
+                cfsp.post(currentCostFunction);
+                Notification.show("CostFunction added").setPosition(Notification.Position.BOTTOM_START);
+                updateBarChart(currentCostFunction);
+                updateCfSelectionGrid();
+
+            }
         });
-
 
 
         valueChanger.setHeight("5%");
@@ -189,26 +210,20 @@ public class CostFunctionView extends FlexLayout {
 
     }
 
-    private ApexCharts renderBarChart() {
-        return this.cfChart;
+    private ApexCharts getBarChart() {
+        return getBarChart(currentCostFunction);
     }
 
-    private ApexCharts renderEmptyBarChart(int from, int to) {
 
-        this.labelList = new LinkedList<>();
-        var data = new LinkedList<>();
-        for (int i = from; i <= to; i += incr) {
-            data.add(stdPrice);
-            labelList.add((i <= 0 ? "" : "+") + i + "min");
-        }
-        this.dataSeries.setData(data.toArray(Integer[]::new));
-        this.dataSeries.setName("Value");
+    private ApexCharts getBarChart(CostFunction cf) {
+        var priceSeries = new Series<Float>();
+        priceSeries.setData(cf.getPriceList().toArray(Float[]::new));
+        priceSeries.setName("Value");
 
-        return renderBarChart(this.dataSeries, this.labelList);
-
+        return getBarChart(priceSeries, cf.getLabelList());
     }
 
-    private ApexCharts renderBarChart(Series<Integer> data, List<String> labels) {
+    private ApexCharts getBarChart(Series<Float> data, List<String> labels) {
 
         ApexCharts barChart = new ApexCharts()
                 .withChart(ChartBuilder.get()
@@ -233,38 +248,33 @@ public class CostFunctionView extends FlexLayout {
                         .build());
 
         barChart.setWidth("100%");
-        barChart.setHeight("90%"); //does strange things when set to 100%
+        barChart.setHeight("93%"); //does strange things when set to 100%
 
         return barChart;
     }
 
-    private ApexCharts renderSelectedBarChart(String selection) {
-
-        var cf = cfsp.fetchCF(selection);
-        var data = cf.getProposalList().stream().map(Proposal::getPrice).map(Math::round).collect(Collectors.toList());
-        this.labelList = cf.getProposalList().stream().map(Proposal::getDelay).map(x -> (x <= 0 ? "" : "+") + x + "min").collect(Collectors.toList());
-        this.dataSeries.setData(data.toArray(Integer[]::new));
-        this.dataSeries.setName("Value");
-
-        return renderBarChart(dataSeries, labelList);
-
+    private ApexCharts getSelectedBarChart(String selection) {
+        currentCostFunction = cfsp.fetchCF(selection);
+        return getBarChart(currentCostFunction);
     }
 
-    private void updateBarChart(int pos, int val) {
-        Series<Integer> newDataSeries = Utility.changeSeries(dataSeries, pos, val);
-        var newChart = renderBarChart(newDataSeries, this.labelList);
-        changeBarChart(newChart);
 
-    }
-
-    private void updateGrid() {
+    private void updateCfSelectionGrid() {
         List<String> items = cfsp.fetch(ul.getAirlineAlias());
-        grid.setItems(items);
+        cfGrid.setItems(items);
+
     }
 
-    private void changeBarChart(ApexCharts newChart) {
-        cfView.replace(cfChart, newChart);
-        cfChart = newChart;
+    private void updatePriceChangerGrid(CostFunction cf) {
+        currentPriceGrid.setItems(cf.getLabelList());
+        i=0;
     }
+
+    private void updateBarChart(CostFunction cf) {
+        var newChart = getBarChart(cf);
+        cfView.replace(currentBarChart, newChart);
+        currentBarChart = newChart;
+    }
+
 }
 

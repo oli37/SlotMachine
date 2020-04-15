@@ -27,7 +27,6 @@ public class DbManager {
         try {
             if (connection == null)
                 connection = DriverManager.getConnection(url, user, password);
-            System.out.println("Connection successful");
         } catch (SQLException ignore) {
             System.out.println("Connection failed");
         }

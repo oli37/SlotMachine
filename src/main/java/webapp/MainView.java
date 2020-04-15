@@ -82,6 +82,7 @@ public class MainView extends VerticalLayout {
         VerticalLayout footer = new VerticalLayout();
         H6 user;
 
+
         if (ul.isAirline()) {
             user = new H6(ul.getUserName() + "  (AIRLINE: " + ul.getAirlineAlias() + ")");
         } else {

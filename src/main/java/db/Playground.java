@@ -2,7 +2,6 @@ package db;
 
 
 import application.CostFunction;
-import application.Proposal;
 
 /**
  * This class is for playing around with DB stuff
@@ -17,23 +16,9 @@ public class Playground {
         AirportServiceProvider apsp = new AirportServiceProvider();
 
 
-        CostFunction cf = new CostFunction();
+        CostFunction cf = new CostFunction("TestCF", "AMG", 0, 120, 15, 50);
 
-        for (int i=0; i<=120; i+=15){
-            Proposal p = new Proposal();
-            p.setPrice((int)(Math.random()*200));
-            p.setDelay(i);
-            p.setBid(false);
-            cf.addProposal(p);
-        }
-
-
-
-        cf.setName("JJJ");
-        cf.setOwner("AMG");
-
-        cfsp.post(cf);
-
+        System.out.println(cf);
         /*
         Airport departureAirport = apsp.fetch("AKA");
         Airport destinationAirport = apsp.fetch("ACC");
