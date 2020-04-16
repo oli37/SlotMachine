@@ -4,15 +4,15 @@ public class Proposal {
     private int proposalID;
     private float price;
     private int delay; //in minutes
-    private boolean isBid; //else Ask
+    private boolean isAsk; //else Ask
 
     public Proposal() {
     }
 
-    public Proposal( float price, int delay, boolean isBid) {
+    public Proposal( float price, int delay, boolean isAsk) {
         this.price = price;
         this.delay = delay;
-        this.isBid = isBid;
+        this.isAsk = isAsk;
     }
 
 
@@ -40,12 +40,12 @@ public class Proposal {
         this.delay = delay;
     }
 
-    public boolean isBid() {
-        return isBid;
+    public boolean isAsk() {
+        return isAsk;
     }
 
-    public void setBid(boolean bid) {
-        isBid = bid;
+    public void setAsk(boolean ask) {
+        isAsk = ask;
     }
 
     @Override
@@ -54,7 +54,7 @@ public class Proposal {
                 ", proposal_id=" + proposalID +
                 ", price=" + price +
                 ", delay=" + delay +
-                ", isBid=" + isBid +
+                ", isBid=" + isAsk +
                 '}';
     }
 }

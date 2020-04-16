@@ -25,6 +25,7 @@ import com.vaadin.flow.component.textfield.TextField;
 import com.vaadin.flow.server.VaadinSession;
 import db.CostFunctionServiceProvider;
 
+import java.util.LinkedList;
 import java.util.List;
 
 
@@ -34,7 +35,8 @@ public class CostFunctionView extends FlexLayout {
     private VerticalLayout sidebar;
     private HorizontalLayout valueChanger;
     private Grid<String> cfGrid;
-    private static int i = 0;
+    private static int enumeratorPrice = 0;
+    private static int enumeratorBid = 0;
 
 
     private int from = -15, to = 60, incr = 15, stdPrice = 50;
@@ -99,29 +101,54 @@ public class CostFunctionView extends FlexLayout {
         priceGrid.setItems(currentCostFunction.getLabelList());
         priceGrid.addColumn(x -> x).setHeader("Delay");
 
-        i = 0;
+        enumeratorPrice = 0;
+        enumeratorBid = 0;
+
         priceGrid.addComponentColumn(x ->
         {
             var nf = new NumberField();
-            nf.setId(Integer.toString(i));
-            nf.setValue((double) currentCostFunction.getPriceList().get(i));
+            nf.setId(Integer.toString(enumeratorPrice));
+            nf.setValue((double) currentCostFunction.getPriceList().get(enumeratorPrice));
             nf.setMin(0d);
             nf.setSuffixComponent(new Icon(VaadinIcon.EURO));
-
+            nf.setWidth("90%");
             nf.addValueChangeListener(cl -> {
                 int value = nf.getValue().intValue();
                 if (nf.getId().isPresent())
-                    i = Integer.parseInt(nf.getId().get());
-
-                currentCostFunction.setPrice(i, value);
+                    currentCostFunction.setPrice(Integer.parseInt(nf.getId().get()), value);
                 updateBarChart(currentCostFunction);
             });
-            i += 1;
+            enumeratorPrice += 1;
 
             return nf;
         }).setHeader("Price");
 
-        i = 0;
+
+        priceGrid.addComponentColumn(x -> {
+            var askButton = new Button("ASK");
+            askButton.setId(Integer.toString(enumeratorBid));
+
+            askButton.addClickListener(c -> {
+                if (askButton.getId().isPresent()) {
+                    var selected = Integer.parseInt(askButton.getId().get());
+                    var ask = !currentCostFunction.getAskList().get(selected);
+                    currentCostFunction.setAsk(selected, ask);
+
+                    if (ask) askButton.setText("ASK");
+                    else askButton.setText("BID");
+
+                    updateBarChart(currentCostFunction);
+                    System.out.println("ASK:"+ask+currentCostFunction.getAskList());
+                }
+            });
+
+            enumeratorBid += 1;
+            return askButton;
+        }).setHeader("Bid/Ask");
+
+
+        enumeratorPrice = 0;
+        enumeratorBid = 0;
         priceGrid.setHeightFull();
         return priceGrid;
     }
@@ -215,9 +242,16 @@ public class CostFunctionView extends FlexLayout {
     }
 
 
-    private ApexCharts getBarChart(CostFunction cf) {
+    private ApexCharts getBarChart(CostFunction cf)  {
         var priceSeries = new Series<Float>();
-        priceSeries.setData(cf.getPriceList().toArray(Float[]::new));
+        var tempPriceList = new LinkedList<Float>(cf.getPriceList());
+
+        for (int i = 0; i < cf.getPriceList().size(); i++) {
+            if(!cf.getAskList().get(i))
+                tempPriceList.set(i, tempPriceList.get(i)*-1);
+
+        }
+        priceSeries.setData(tempPriceList.toArray(Float[]::new));
         priceSeries.setName("Value");
 
         return getBarChart(priceSeries, cf.getLabelList());
@@ -267,7 +301,8 @@ public class CostFunctionView extends FlexLayout {
 
     private void updatePriceChangerGrid(CostFunction cf) {
         currentPriceGrid.setItems(cf.getLabelList());
-        i=0;
+        enumeratorPrice = 0;
+        enumeratorBid = 0;
     }
 
     private void updateBarChart(CostFunction cf) {

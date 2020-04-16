@@ -1,7 +1,6 @@
 package db;
 
 import application.CostFunction;
-import application.Flight;
 import application.Proposal;
 
 import java.sql.Connection;
@@ -200,8 +199,8 @@ public class CostFunctionServiceProvider implements ServiceProvider {
             PreparedStatement pstmt = connection.prepareStatement(postProp);
             pstmt.setFloat(1, prop.getPrice());
             pstmt.setInt(2, prop.getDelay());
-            pstmt.setBoolean(3, prop.isBid());
-            pstmt.setBoolean(4, !prop.isBid());
+            pstmt.setBoolean(3, prop.isAsk());
+            pstmt.setBoolean(4, !prop.isAsk());
             pstmt.setString(5, cf);
 
             return pstmt;
@@ -218,7 +217,7 @@ public class CostFunctionServiceProvider implements ServiceProvider {
             prop.setProposalID(rs.getInt("proposal_id"));
             prop.setPrice(rs.getFloat("price"));
             prop.setDelay(rs.getInt("delay"));
-            prop.setBid(rs.getBoolean("bid"));
+            prop.setAsk(rs.getBoolean("bid"));
 
             return prop;
         } catch (Exception e) {

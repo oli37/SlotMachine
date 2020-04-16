@@ -106,8 +106,8 @@ public class ProposalServiceProvider implements ServiceProvider {
 
             pstmt.setFloat(1, prop.getPrice());
             pstmt.setInt(2, prop.getDelay());
-            pstmt.setBoolean(3, prop.isBid());
-            pstmt.setBoolean(4, !prop.isBid());
+            pstmt.setBoolean(3, prop.isAsk());
+            pstmt.setBoolean(4, !prop.isAsk());
             pstmt.setString(5, cf);
 
             return pstmt;

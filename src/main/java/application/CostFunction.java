@@ -4,7 +4,7 @@ import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
 
-public class CostFunction {
+public class CostFunction  {
 
     private String name;
     private String owner; //which Airline
@@ -12,7 +12,7 @@ public class CostFunction {
 
     private List<Integer> delayList = new LinkedList<>();
     private List<Float> priceList = new LinkedList<>();
-    private List<Boolean> bidList = new LinkedList<>();
+    private List<Boolean> askList = new LinkedList<>();
     private List<String> labelList = new LinkedList<>();
 
 
@@ -41,7 +41,7 @@ public class CostFunction {
         for (int delay = from; delay <= to; delay += incr) {
             priceList.add(stdPrice);
             delayList.add(delay);
-            bidList.add(true);
+            askList.add(true);
             labelList.add((delay <= 0 ? "" : "+") + delay + "min");
             proposalList.add(new Proposal(stdPrice, delay, true));
         }
@@ -80,33 +80,36 @@ public class CostFunction {
         return priceList;
     }
 
-    public List<Boolean> getBidList() {
-        return bidList;
+    public List<Boolean> getAskList() {
+        return askList;
     }
 
     public List<String> getLabelList() {
         return labelList;
     }
 
+
+    public void setAsk(int element, boolean value){
+        assert element < askList.size();
+        proposalList.get(element).setAsk(value);
+        askList.set(element, value);
+    }
+
     public void setPrice(int element, float value) {
         assert element < proposalList.size();
-        var prop = proposalList.get(element);
-        prop.setPrice(value);
-        proposalList.set(element, prop);
+        proposalList.get(element).setPrice(value);
         priceList.set(element, value);
     }
 
     public void setProposalList(List<Proposal> proposalList) {
         this.proposalList = proposalList;
-        for (var prop : proposalList) {
-           proposalToList(prop);
-        }
+        proposalList.forEach(this::proposalToList);
     }
 
     private void proposalToList(Proposal prop ){
         priceList.add(prop.getPrice());
         delayList.add(prop.getDelay());
-        bidList.add(prop.isBid());
+        askList.add(prop.isAsk());
         labelList.add((prop.getDelay() <= 0 ? "" : "+") + prop.getDelay() + "min");
     }
 
@@ -118,7 +121,7 @@ public class CostFunction {
                 ", proposalList=" + proposalList +
                 ", delayList=" + delayList +
                 ", priceList=" + priceList +
-                ", bidList=" + bidList +
+                ", bidList=" + askList +
                 ", labelList=" + labelList +
                 '}';
     }

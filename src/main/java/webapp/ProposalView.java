@@ -1,7 +1,6 @@
 package webapp;
 
 import application.*;
-import com.vaadin.flow.component.UI;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.button.ButtonVariant;
 import com.vaadin.flow.component.combobox.ComboBox;
@@ -81,7 +80,7 @@ public class ProposalView extends FlexLayout {
         proposalGrid = new Grid<>();
         //proposalGrid.addColumn(Proposal::getDesiredTime).setHeader("Proposed Time");
         proposalGrid.addColumn(Proposal::getPrice).setHeader("Price");
-        proposalGrid.addColumn(p -> p.isBid() ? "BID" : "ASK").setHeader("BID/ASK");
+        proposalGrid.addColumn(p -> p.isAsk() ? "BID" : "ASK").setHeader("BID/ASK");
 
 
         flightGrid.addSelectionListener(event -> {
