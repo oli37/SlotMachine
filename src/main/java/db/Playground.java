@@ -1,8 +1,6 @@
 package db;
 
 
-import application.CostFunction;
-
 /**
  * This class is for playing around with DB stuff
  * Do not use it for something else
@@ -14,12 +12,16 @@ public class Playground {
         CostFunctionServiceProvider cfsp = new CostFunctionServiceProvider();
         AirlineServiceProvider alsp = new AirlineServiceProvider();
         AirportServiceProvider apsp = new AirportServiceProvider();
+        ProposalServiceProvider psp = new ProposalServiceProvider();
+
+        int d = 0;
+        var res = (d <= 0 ? "" : "+") + d + "min";
+        System.out.println(res);
 
 
-        CostFunction cf = new CostFunction("TestCF", "AMG", 0, 120, 15, 50);
+        /*CostFunction cf = new CostFunction("TestCF", "AMG", 0, 120, 15, 50);
 
         System.out.println(cf);
-        /*
         Airport departureAirport = apsp.fetch("AKA");
         Airport destinationAirport = apsp.fetch("ACC");
         Airline airline = alsp.fetch("000");

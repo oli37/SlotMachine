@@ -83,7 +83,7 @@ public class CostFunctionView extends FlexLayout {
         VerticalLayout cfSelection = new VerticalLayout();
         VerticalLayout cfValues = new VerticalLayout();
         cfSelection.add(new H6("COST FUNCTIONS"));
-        cfValues.add(new H6("VALUES"));
+        cfValues.add(new H6("PRICE"));
 
         cfGrid = getCfSelectionGrid();
         cfSelection.add(cfGrid);

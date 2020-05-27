@@ -29,6 +29,7 @@ public class CostFunctionServiceProvider implements ServiceProvider {
     private String count = "SELECT COUNT(*) FROM slotmachine.costfunction";
     private String postCF = "INSERT INTO slotmachine.costfunction (cf_name, owner) VALUES (?, ?)";
     private String postProp = "INSERT INTO slotmachine.proposal (price, delay, bid, ask, cf) VALUES (?, ?, ?, ?, ?)";
+    private String queryOwner = "SELECT costfunction.owner FROM slotmachine.costfunction WHERE costfunction.cf_name = ?";
 
 
     public CostFunctionServiceProvider() {
@@ -111,18 +112,17 @@ public class CostFunctionServiceProvider implements ServiceProvider {
 
     public CostFunction fetchCF(String cfName) {
         PreparedStatement pstmt;
-        CostFunction cf = new CostFunction(cfName);
+        CostFunction cf = new CostFunction();
         try {
             pstmt = connection.prepareStatement(queryCF);
             pstmt.setString(1, cfName);
             ResultSet rs = pstmt.executeQuery();
             cf.setName(cfName);
-
+            cf.setOwner(getOwner(cfName));
             while (rs.next()) {
                 cf.addProposal(unwrap(rs));
             }
 
-            pstmt = connection.prepareStatement(queryCF);
 
             pstmt.close();
             rs.close();
@@ -226,4 +226,23 @@ public class CostFunctionServiceProvider implements ServiceProvider {
         }
     }
 
+    public String getOwner(String cf) {
+        PreparedStatement pstmt;
+        String result = "";
+        try {
+            pstmt = connection.prepareStatement(queryOwner);
+            pstmt.setString(1, cf);
+            ResultSet rs = pstmt.executeQuery();
+
+            while (rs.next()) {
+                result = rs.getString(1);
+            }
+
+            pstmt.close();
+            rs.close();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return result;
+    }
 }

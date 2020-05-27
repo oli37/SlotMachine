@@ -2,7 +2,10 @@ package db;
 
 import application.Proposal;
 
-import java.sql.*;
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -68,7 +71,9 @@ public class ProposalServiceProvider implements ServiceProvider {
 
 
     public List<Proposal> fetchByFlightID(int flightId) {
-        String sqlAuction2 = "SELECT * FROM slotmachine.proposal WHERE flight_id = ? ";
+        String sqlAuction2 = "SELECT proposal.proposal_id, flight.flight_id, proposal.price, proposal.ask, proposal.delay, flight.departuretime\n" +
+                "FROM slotmachine.flight, slotmachine.proposal, slotmachine.cf_flight_attr\n" +
+                "WHERE cf_flight_attr.flight_id = ? AND cf_flight_attr.flight_id = flight.flight_id AND cf_flight_attr.cf_name = proposal.cf\n";
 
         PreparedStatement pstmt;
         List<Proposal> proposalList = new ArrayList<>();
@@ -80,14 +85,10 @@ public class ProposalServiceProvider implements ServiceProvider {
             ResultSet res = pstmt.executeQuery();
 
             while (res.next()) {
-                int auctionID = res.getInt(1);
-                int flightID = res.getInt(2);
-                float price = res.getFloat(3);
-                boolean isBid = res.getBoolean(4);
-                Timestamp initialTime = res.getTimestamp(6);
-                Timestamp desiredTime = res.getTimestamp(7);
-
-                Proposal proposal = new Proposal();//auctionID, flightID, price, isBid, initialTime.toLocalDateTime(), desiredTime.toLocalDateTime());
+                float price = res.getFloat("price");
+                boolean isAsk = res.getBoolean("ask");
+                int delay = res.getInt("delay");
+                Proposal proposal = new Proposal(price, delay, isAsk);
                 proposalList.add(proposal);
             }
 

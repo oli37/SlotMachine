@@ -36,10 +36,15 @@ public class ProposalView extends FlexLayout {
     private Grid<Proposal> proposalGrid;
     private Grid<Flight> flightGrid;
     private Flight flight;
-    private CostFunction cfByName;
-    private CostFunctionServiceProvider cfsp;
-    private ProposalServiceProvider psp;
-    private AirlineServiceProvider alsp;
+    private CostFunction selectedCf;
+
+    AirlineServiceProvider alsp = new AirlineServiceProvider();
+    ProposalServiceProvider psp = new ProposalServiceProvider();
+    CostFunctionServiceProvider cfsp = new CostFunctionServiceProvider();
+    FlightServiceProvider flsp = new FlightServiceProvider();
+
+    VaadinSession vaadinSession = VaadinSession.getCurrent();
+    UserLogin ul = vaadinSession.getAttribute(UserLogin.class);
 
     public FlexComponent draw() {
         subComponent = new VerticalLayout();
@@ -49,13 +54,7 @@ public class ProposalView extends FlexLayout {
         costFunctionProposal = new HorizontalLayout();
 
         var text = new H6();
-
-        alsp = new AirlineServiceProvider();
-        psp = new ProposalServiceProvider();
-        cfsp = new CostFunctionServiceProvider();
         var airlines = alsp.fetch().stream().map(Airline::getAlias).collect(Collectors.toList());
-        VaadinSession vaadinSession = VaadinSession.getCurrent();
-        var ul = vaadinSession.getAttribute(UserLogin.class);
 
 
         Label airlineLabel = new Label("Select Airline:");
@@ -79,11 +78,14 @@ public class ProposalView extends FlexLayout {
 
         proposalGrid = new Grid<>();
         //proposalGrid.addColumn(Proposal::getDesiredTime).setHeader("Proposed Time");
+
+        proposalGrid.addColumn(d -> (d.getDelay() <= 0 ? "" : "+") + d.getDelay() + "min").setHeader("Delay");
         proposalGrid.addColumn(Proposal::getPrice).setHeader("Price");
-        proposalGrid.addColumn(p -> p.isAsk() ? "BID" : "ASK").setHeader("BID/ASK");
+        proposalGrid.addColumn(p -> p.isAsk() ? "ASK" : "BID").setHeader("BID/ASK");
 
 
         flightGrid.addSelectionListener(event -> {
+            assert event.getFirstSelectedItem().isPresent();
             flight = event.getFirstSelectedItem().get();
             flightID = flight.getFlightID();
             initialTime = flight.getDepartureTime();
@@ -99,7 +101,6 @@ public class ProposalView extends FlexLayout {
 
         flightGrid.asSingleSelect().addValueChangeListener(event -> {
             text.setText(event.getValue().toString());
-            //addProposal();
             applyCF();
         });
 
@@ -112,10 +113,10 @@ public class ProposalView extends FlexLayout {
         flightGrid.setHeight("100%");
         proposalGrid.setHeight("100%");
 
-        if(ul.isAirline()) {
+        if (ul.isAirline()) {
             var items = flsp.fetchByAirline(ul.getAirlineAlias());
             flightGrid.setItems(items);
-        }else { //ADMIN & NWMGMT
+        } else { //ADMIN & NWMGMT
             airlineSelection.add(airlineLabel, airlineCombobox);
         }
 
@@ -217,7 +218,7 @@ public class ProposalView extends FlexLayout {
         costFunctionProposal.removeAll();
         costFunctionProposal.setWidth("742px");
 
-        var strListCfNames = "";//cfsp.fetch().stream().map(CostFunction::getName).collect(Collectors.toList());
+        var strListCfNames = cfsp.fetch(ul.getAirlineAlias());
 
         ComboBox<String> costFunctionComboBox = new ComboBox<>();
         costFunctionComboBox.setItems(strListCfNames);
@@ -233,14 +234,14 @@ public class ProposalView extends FlexLayout {
 
         costFunctionComboBox.addValueChangeListener(event -> {
             String selected = event.getValue();
-            System.out.println(selected);
-            //cfByName = cfsp.fetchByCfName(selected).get(0); //only first one
+            selectedCf = cfsp.fetchCF(selected);
+            System.out.println(selectedCf);
         });
 
         applyFunctionButton.addClickListener(event -> {
 
-
-
+            assert selectedCf != null;
+            flsp.link(selectedCf, flight);
             var items = psp.fetchByFlightID(flightID);
             proposalGrid.setItems(items);
 

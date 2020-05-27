@@ -4,10 +4,8 @@ import application.Airline;
 import application.Airport;
 import application.CostFunction;
 import application.Flight;
-import org.checkerframework.checker.units.qual.C;
 
 import java.sql.*;
-import java.time.LocalDateTime;
 import java.time.OffsetDateTime;
 import java.time.ZoneOffset;
 import java.util.ArrayList;
@@ -185,13 +183,13 @@ public class FlightServiceProvider implements ServiceProvider {
         Airline al = new Airline(airlineName, airlineAlias, airlineCountry);
         Airport apDep = new Airport(departureAirportName, departureAirportCity, departureAirportAlias, departureAirportCountry, departureAirportTimeZoneOffset);
         Airport apDes = new Airport(destinationAirportName, destinationAirportCity, destinationAirportAlias, destinationAirportCountry, destinationAirportTimeZoneOffset);
-        OffsetDateTime departureTime = departuretime.toLocalDateTime().atOffset(ZoneOffset.of(departureAirportTimeZoneOffset));
-        OffsetDateTime destinationTime = destinationtime.toLocalDateTime().atOffset(ZoneOffset.of(destinationAirportTimeZoneOffset));
+        OffsetDateTime departureTime = departuretime.toLocalDateTime().atOffset(ZoneOffset.of("Z"));
+        OffsetDateTime destinationTime = destinationtime.toLocalDateTime().atOffset(ZoneOffset.of("Z"));
 
         return new Flight(id, apDep, apDes, al, departureTime, destinationTime);
     }
 
-    private boolean link(CostFunction cf, Flight f) {
+    public boolean link(CostFunction cf, Flight f) {
         try {
             PreparedStatement pstmt = connection.prepareStatement(postLink);
             pstmt.setString(1, cf.getName());

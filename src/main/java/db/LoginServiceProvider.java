@@ -23,7 +23,7 @@ public class LoginServiceProvider {
         int res = 0;
 
         try {
-            String query = "SELECT COUNT(*) FROM slotmachine.user WHERE username = ? AND pwhash = ?";
+            String query = "SELECT COUNT(*) FROM slotmachine.users WHERE username = ? AND pwhash = ?";
 
             pstmt = connection.prepareStatement(query);
             pstmt.setString(1, user);
@@ -47,7 +47,7 @@ public class LoginServiceProvider {
         String res = null;
 
         try {
-            String query = "SELECT role FROM slotmachine.user WHERE username = ?";
+            String query = "SELECT role FROM slotmachine.users WHERE username = ?";
 
             pstmt = connection.prepareStatement(query);
             pstmt.setString(1, user);
@@ -69,7 +69,7 @@ public class LoginServiceProvider {
         String res = null;
 
         try {
-            String query = "SELECT airline FROM slotmachine.user WHERE username = ?";
+            String query = "SELECT airline FROM slotmachine.users WHERE username = ?";
 
             pstmt = connection.prepareStatement(query);
             pstmt.setString(1, user);
