@@ -4,13 +4,13 @@ import application.Airline;
 import application.Airport;
 import application.Flight;
 import application.UserLogin;
+import com.vaadin.flow.component.Component;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.combobox.ComboBox;
 import com.vaadin.flow.component.datepicker.DatePicker;
 import com.vaadin.flow.component.grid.Grid;
 import com.vaadin.flow.component.html.H6;
 import com.vaadin.flow.component.notification.Notification;
-import com.vaadin.flow.component.orderedlayout.FlexComponent;
 import com.vaadin.flow.component.orderedlayout.FlexLayout;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.component.timepicker.TimePicker;
@@ -21,14 +21,17 @@ import db.AirportServiceProvider;
 import db.DbManager;
 import db.FlightServiceProvider;
 
-import java.time.*;
+import java.time.LocalDate;
+import java.time.LocalTime;
+import java.time.OffsetDateTime;
+import java.time.ZoneOffset;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Collectors;
 
 public class FlightView extends FlexLayout {
 
-    public FlexComponent<FlexLayout> draw() {
+    public Component draw() {
 
         DbManager dbManager = new DbManager();
         var flist = dbManager.getAllFlights();
@@ -69,13 +72,13 @@ public class FlightView extends FlexLayout {
             grid.setDataProvider(dataProviderFlight);
         }
 
-
+        grid.addColumn(flight -> flight.getFlightID()).setHeader("Flight ID");
         grid.addColumn(flight -> flight.getAirline().getAlias()).setHeader("Airline");
         grid.addColumn(flight -> flight.getDepartureAirport().getAlias()).setHeader("Departure Airport");
         grid.addColumn(flight -> flight.getDepartureTime()).setHeader("Departure Time");
         grid.addColumn(flight -> flight.getDestinationAirport().getAlias()).setHeader("Destination Airport");
-        grid.addColumn(flight -> flight.getDestinationTime()).setHeader("Destination Airport");
-        grid.addColumn(flight -> flight.getFlightTime()).setHeader("Flight Time");
+        //grid.addColumn(flight -> flight.getDestinationTime()).setHeader("Destination Airport");
+        //grid.addColumn(flight -> flight.getFlightTime()).setHeader("Flight Time");
 
         flightGrid.setWidth("175%");
         flightGrid.add(grid);

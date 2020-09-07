@@ -8,7 +8,6 @@ import com.vaadin.flow.component.grid.Grid;
 import com.vaadin.flow.component.html.H6;
 import com.vaadin.flow.component.html.Label;
 import com.vaadin.flow.component.notification.Notification;
-import com.vaadin.flow.component.orderedlayout.FlexComponent;
 import com.vaadin.flow.component.orderedlayout.FlexLayout;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
@@ -46,7 +45,7 @@ public class ProposalView extends FlexLayout {
     VaadinSession vaadinSession = VaadinSession.getCurrent();
     UserLogin ul = vaadinSession.getAttribute(UserLogin.class);
 
-    public FlexComponent draw() {
+    public ProposalView draw() {
         subComponent = new VerticalLayout();
         gridContainer = new HorizontalLayout();
         airlineSelection = new HorizontalLayout();

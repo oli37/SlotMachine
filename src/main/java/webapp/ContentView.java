@@ -1,6 +1,5 @@
 package webapp;
 
-import com.vaadin.flow.component.Component;
 import com.vaadin.flow.component.html.H6;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
@@ -19,7 +18,7 @@ public class ContentView extends HorizontalLayout {
         var flightView = new FlightView();
         flightView.setSizeFull();
         removeAll();
-        add((Component) flightView.draw());
+        add(flightView.draw());
     }
 
     public void drawCostFunction() {
@@ -30,9 +29,16 @@ public class ContentView extends HorizontalLayout {
     }
 
     public void drawProposal() {
-        var auctionView = new ProposalView();
-        auctionView.setSizeFull();
+        var proposalView = new ProposalView();
+        proposalView.setSizeFull();
         removeAll();
-        add((Component) auctionView.draw());
+        add(proposalView.draw());
+    }
+
+    public void drawHotspot() {
+        var hotspotView = new HotspotView();
+        hotspotView.setSizeFull();
+        removeAll();
+        add(hotspotView.draw());
     }
 }

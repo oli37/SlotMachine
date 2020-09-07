@@ -24,12 +24,15 @@ public class DbManager {
 
     public DbManager() {
 
-        try {
-            if (connection == null)
-                connection = DriverManager.getConnection(url, user, password);
-        } catch (SQLException ignore) {
-            System.out.println("Connection failed");
+        while (connection == null) {
+            try {
+                connection = connection = DriverManager.getConnection(url, user, password);
+                System.out.println(connection != null ? "Connected" : "Failed to Connect");
+            } catch (SQLException e) {
+                e.printStackTrace();
+            }
         }
+
     }
 
     public Connection getConnection() {

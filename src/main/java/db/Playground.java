@@ -6,20 +6,29 @@ package db;
  * Do not use it for something else
  */
 public class Playground {
+
+
+
     public static void main(String[] args) {
 
         FlightServiceProvider flsp = new FlightServiceProvider();
-        CostFunctionServiceProvider cfsp = new CostFunctionServiceProvider();
+        //CostFunctionServiceProvider cfsp = new CostFunctionServiceProvider();
         AirlineServiceProvider alsp = new AirlineServiceProvider();
         AirportServiceProvider apsp = new AirportServiceProvider();
         ProposalServiceProvider psp = new ProposalServiceProvider();
 
-        int d = 0;
-        var res = (d <= 0 ? "" : "+") + d + "min";
-        System.out.println(res);
+        DbManager dbm = new DbManager();
+        var con = dbm.getConnection();
+        System.out.println(con);
+        System.out.println(con == null);
+        /*for(int i=0; i<96; i++){
+            String h = (i/4)<10 ? "0"+(i/4) : Integer.toString((i/4));
+            String m = ((i%4)*15)==0 ? "0"+((i%4)*15) : Integer.toString(((i%4)*15));
+            String t = h + ":" + m;
+            System.out.println(t);
+        }
 
-
-        /*CostFunction cf = new CostFunction("TestCF", "AMG", 0, 120, 15, 50);
+        CostFunction cf = new CostFunction("TestCF", "AMG", 0, 120, 15, 50);
 
         System.out.println(cf);
         Airport departureAirport = apsp.fetch("AKA");

@@ -13,24 +13,12 @@ public class Flight {
     private Airport destinationAirport;
     private Airline airline;
     private OffsetDateTime departureTime;
-    private OffsetDateTime destinationTime;
+    private OffsetDateTime destinationTime; //not used
     private List<CostFunction> costFunctionList = new ArrayList<>();
-
-
-
-    public Flight(int flightID,
-                  Airport departureAirport,
-                  Airport destinationAirport,
-                  Airline airline,
-                  OffsetDateTime departureTime,
-                  OffsetDateTime destinationTime) {
-        this.flightID = flightID;
-        this.departureAirport = departureAirport;
-        this.destinationAirport = destinationAirport;
-        this.airline = airline;
-        this.departureTime = departureTime;
-        this.destinationTime = destinationTime;
-    }
+    private int timeslot; // one slot for every 15min = 24*4=96 slots
+    //00:00 - 00:14 slot 0
+    //00:15 - 00:29 slot 1
+    //...
 
     public Flight(Airport departureAirport,
                   Airport destinationAirport,
@@ -42,7 +30,20 @@ public class Flight {
         this.airline = airline;
         this.departureTime = departureTime;
         this.destinationTime = destinationTime;
+        this.timeslot = calculateTimeslot();
     }
+
+    public Flight(int flightID,
+                  Airport departureAirport,
+                  Airport destinationAirport,
+                  Airline airline,
+                  OffsetDateTime departureTime,
+                  OffsetDateTime destinationTime) {
+
+        this(departureAirport, destinationAirport, airline, departureTime, destinationTime);
+        this.flightID = flightID;
+    }
+
 
     public int getFlightID() {
         return flightID;
@@ -82,6 +83,8 @@ public class Flight {
 
     public void setDepartureTime(OffsetDateTime departureTime) {
         this.departureTime = departureTime;
+        this.timeslot = calculateTimeslot();
+
     }
 
     public OffsetDateTime getDestinationTime() {
@@ -100,9 +103,21 @@ public class Flight {
         this.costFunctionList = costFunctionList;
     }
 
-    public void addCF(CostFunction cf){
+    public void addCF(CostFunction cf) {
         costFunctionList.add(cf);
     }
+
+    public int getTimeslot() {
+        return timeslot;
+    }
+
+    private int calculateTimeslot() {
+        int h = departureTime.getHour();
+        int m = departureTime.getMinute();
+
+        return (int) (h * 4 + (m / 15) + 0.5);
+    }
+
 
     /**
      * @return flight time in milliseconds
@@ -119,6 +134,7 @@ public class Flight {
     public String toString() {
         return "Flight{" +
                 "flightID=" + flightID +
+                ", timeslot=" + timeslot +
                 ", departureAirport=" + departureAirport +
                 ", destinationAirport=" + destinationAirport +
                 ", airline=" + airline +

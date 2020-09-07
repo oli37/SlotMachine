@@ -69,13 +69,13 @@ public class MainView extends VerticalLayout {
 
         //Retrieve user information from session
         VaadinSession vaadinSession = VaadinSession.getCurrent();
-        var ul = vaadinSession.getAttribute(UserLogin.class);
+        //var ul = vaadinSession.getAttribute(UserLogin.class);
 
         //Just for testing **********************************************************
         //CHANGE ROUTE TO MAIN
         LoginServiceProvider lsp = new LoginServiceProvider();
-        UserLogin userLogin = new UserLogin("Susi", "1234", lsp.getUserRole("Susi"), lsp.getAirline("Susi"));
-        vaadinSession.setAttribute(UserLogin.class, userLogin);
+        UserLogin ul = new UserLogin("Susi", "1234", lsp.getUserRole("Susi"), lsp.getAirline("Susi"));
+        vaadinSession.setAttribute(UserLogin.class, ul);
         //***************************************************************************
 
         //Show current user information from session
@@ -111,11 +111,14 @@ public class MainView extends VerticalLayout {
         VerticalLayout filler = new VerticalLayout();
         filler.setSizeFull();
 
-        if (ul.getRole().equals(Role.ADMIN)) sideMenu.add(createMenuOption("Admin"));
+        if (ul.getRole().equals(Role.ADMIN))
+            sideMenu.add(createMenuOption("Admin"));
+
         sideMenu.add(
                 createMenuOption("Flights"),
                 createMenuOption("Bid/Ask"), //called Proposal
                 createMenuOption("Cost Function"),
+                createMenuOption("Hotspot"),
                 filler,
                 footer);
 
@@ -145,6 +148,7 @@ public class MainView extends VerticalLayout {
         if (title.equals("Flights")) menuButton.addClickListener(ev -> content.drawFlights());
         if (title.equals("Cost Function")) menuButton.addClickListener(ev -> content.drawCostFunction());
         if (title.equals("Bid/Ask")) menuButton.addClickListener(ev -> content.drawProposal());
+        if (title.equals("Hotspot")) menuButton.addClickListener(ev -> content.drawHotspot());
 
         return menuButton;
     }

@@ -4,9 +4,6 @@ import com.github.appreciated.apexcharts.helper.Series;
 import com.google.common.hash.Hashing;
 
 import java.nio.charset.StandardCharsets;
-import java.security.MessageDigest;
-import java.security.NoSuchAlgorithmException;
-import java.util.Arrays;
 
 public class Utility {
 
@@ -28,4 +25,17 @@ public class Utility {
                 .toString();
     }
 
-}
+    public static Integer[] getSliceOfArray(Integer[] arr, int start, int end) {
+
+        // Get the slice of the Array
+        Integer[] slice = new Integer[end - start];
+
+        // Copy elements of arr to slice
+        for (int i = 0; i < slice.length; i++) {
+            slice[i] = arr[start + i];
+        }
+
+        // return the slice
+        return slice;
+    }
+    }

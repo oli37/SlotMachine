@@ -14,14 +14,14 @@ import java.util.List;
 public class FlightServiceProvider implements ServiceProvider {
 
     private static Connection connection = null;
-    private String query = "SELECT f.flight_id, f.departuretime, f.destinationtime, \n" +
+    private String query = "SELECT DISTINCT f.flight_id, f.departuretime, f.destinationtime, \n" +
             "al.airline_name, al.airline_alias, al.airline_country, \n" +
             "ap_des.airport_name AS des_airport_name, ap_des.airport_alias AS des_airport_alias, " +
             "ap_des.airport_city AS des_airport_city, ap_des.airport_country AS des_airport_country, " +
-            "des_city.utc_offset as des_airport_utcoffset,\n" +
+            "des_city.utc_offset AS des_airport_utcoffset,\n" +
             "ap_dep.airport_name AS dep_airport_name, ap_dep.airport_alias AS dep_airport_alias, " +
             "ap_dep.airport_city AS dep_airport_city, ap_dep.airport_country AS dep_airport_country, " +
-            "dep_city.utc_offset as dep_airport_utcoffset\n" +
+            "dep_city.utc_offset AS dep_airport_utcoffset\n" +
             "FROM slotmachine.flight f\n" +
             "LEFT OUTER JOIN slotmachine.airline al ON f.airline = al.airline_alias\n" +
             "LEFT OUTER JOIN slotmachine.airport ap_des ON f.destinationairport = ap_des.airport_alias\n" +
