@@ -282,7 +282,7 @@ public class CostFunctionView extends FlexLayout {
                         .build());
 
         barChart.setWidth("100%");
-        barChart.setHeight("93%"); //does strange things when set to 100%
+        barChart.setHeight("96%"); //does strange things when set to 100%
 
         return barChart;
     }

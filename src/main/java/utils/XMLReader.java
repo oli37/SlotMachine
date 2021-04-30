@@ -1,6 +1,7 @@
 package utils;
 
 import com.opencsv.CSVReader;
+import com.opencsv.exceptions.CsvException;
 
 import java.io.FileReader;
 import java.io.IOException;
@@ -42,6 +43,8 @@ public class XMLReader {
         } catch (IOException e) {
             LOGGER.log(Level.SEVERE, String.valueOf(e));
 
+        } catch (CsvException e) {
+            e.printStackTrace();
         }
         return null;
     }

@@ -1,6 +1,6 @@
 package webapp;
 
-import application.Flight;
+import application.Hotspot;
 import com.github.appreciated.apexcharts.ApexCharts;
 import com.github.appreciated.apexcharts.config.builder.ChartBuilder;
 import com.github.appreciated.apexcharts.config.builder.DataLabelsBuilder;
@@ -10,50 +10,108 @@ import com.github.appreciated.apexcharts.config.chart.Type;
 import com.github.appreciated.apexcharts.config.chart.builder.AnimationsBuilder;
 import com.github.appreciated.apexcharts.config.plotoptions.builder.BarBuilder;
 import com.github.appreciated.apexcharts.helper.Series;
+import com.vaadin.flow.component.button.Button;
+import com.vaadin.flow.component.grid.Grid;
 import com.vaadin.flow.component.html.H6;
+import com.vaadin.flow.component.notification.Notification;
 import com.vaadin.flow.component.orderedlayout.FlexLayout;
+import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
+import com.vaadin.flow.component.textfield.NumberField;
+import com.vaadin.flow.component.timepicker.TimePicker;
 import db.FlightServiceProvider;
-import utils.Utility;
 
+import java.time.Duration;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 
 public class HotspotView extends FlexLayout {
 
 
-    public FlexLayout draw() {
+    private FlightServiceProvider flsp = new FlightServiceProvider();
+    private VerticalLayout chartContainer = new VerticalLayout();
+    private ApexCharts columnChart;
+    private Grid<String> grid = new Grid<>();
+    private Hotspot hotspot = new Hotspot();
 
+
+    public FlexLayout draw() {
 
         var content = new VerticalLayout();
         content.add(new H6("HOTSPOT"));
         var flsp = new FlightServiceProvider();
         var flights = flsp.fetch();
-        var columnChart = getColumnChart(flights);
+        columnChart = getColumnChart();
         columnChart.setWidthFull();
-        columnChart.setHeight("50%");
+        columnChart.setSizeFull();
 
-        content.add(columnChart);
+        chartContainer.setPadding(false);
+        chartContainer.setPadding(false);
+        chartContainer.setHeight("25%");
+
+        var controlContainer = new HorizontalLayout();
+        controlContainer.setPadding(false);
+        controlContainer.setPadding(false);
+
+        chartContainer.add(columnChart);
+
+
+        controlContainer.add(getStartTimeslotPicker(),
+                getEndTimeslotPicker(),
+                getNormalCapacity(),
+                getStressedCapacity(),
+                getAddButton());
+
+        grid.addColumn(x -> x).setHeader("Name");
+        grid.addColumn(x -> x).setHeader("Start");
+        grid.addColumn(x -> x).setHeader("End");
+        grid.addColumn(x -> x).setHeader("Normal Capacity");
+        grid.addColumn(x -> x).setHeader("Stressed Capacity");
+
+
+        content.add(chartContainer, controlContainer, getGrid());
         content.setWidthFull();
         content.setHeight("95%");
         add(content);
         return this;
     }
 
-    public ApexCharts getColumnChart(List<Flight> flightList) {
-        Series<Integer> series = getSeries(flightList);
-        List<String> labels = getLabels();
+
+    private Grid<String> getGrid() {
+
+        return grid;
+    }
+
+    private ApexCharts getColumnChart() {
+        var list = getFlightCapacityList(
+                hotspot.getStartTimeslotIndex(),
+                hotspot.getEndTimeslotIndex(),
+                hotspot.getStressedCapacity(),
+                hotspot.getNormalCapacity(),
+                flsp);
+
+        var normalSeries = new Series<Integer>();
+        var stressedSeries = new Series<Integer>();
+        var recoverySeries = new Series<Integer>();
+
+        normalSeries.setData(list.get(0));
+        normalSeries.setName("normal");
+        stressedSeries.setData(list.get(1));
+        stressedSeries.setName("stressed");
+        recoverySeries.setData(list.get(2));
+        recoverySeries.setName("recovery");
+
 
         return new ApexCharts()
                 .withChart(ChartBuilder.get()
                         .withType(Type.bar)
+                        .withStacked(true)
                         .withAnimations(
                                 AnimationsBuilder.get()
                                         .withEnabled(false)
                                         .build())
                         .build())
-                .withColors("#273746")
+                .withColors("#273746", "#E74C3C", "#239966")
                 .withPlotOptions(PlotOptionsBuilder.get()
                         .withBar(BarBuilder.get()
                                 .withHorizontal(false)
@@ -63,116 +121,178 @@ public class HotspotView extends FlexLayout {
                         .withEnabled(false)
                         .build())
                 .withSeries(
-                        series
+                        normalSeries, stressedSeries, recoverySeries
                 )
                 .withXaxis(XAxisBuilder.get()
-                        .withCategories(labels)
-                        .build());
-    }
-
-
-    public ApexCharts getHeatmap(List<Flight> flightList) {
-        List<Series<Integer>> series = getSeriesForHeatmap(flightList);
-        //List<String> labels = getLabels();
-
-        return new ApexCharts()
-                .withChart(ChartBuilder.get()
-                        .withType(Type.heatmap)
-                        .withAnimations(
-                                AnimationsBuilder.get()
-                                        .withEnabled(false)
-                                        .build())
-                        .build())
-                .withColors("#273746")
-                .withPlotOptions(PlotOptionsBuilder.get()
-                        .withBar(BarBuilder.get()
-                                .withHorizontal(true)
-                                .build())
-                        .build())
-                .withDataLabels(DataLabelsBuilder.get()
-                        .withEnabled(false)
-                        .build())
-                .withSeries(
-                        series.get(7),
-                        series.get(6),
-                        series.get(5),
-                        series.get(4),
-                        series.get(3),
-                        series.get(2),
-                        series.get(1),
-                        series.get(0)
-                )
-                .withXaxis(XAxisBuilder.get()
+                        .withCategories(hotspot.getLabelList())
                         .build());
 
+
     }
 
-    private Series<Integer> getSeries(List<Flight> fl) {
-        Integer[] startingPlanes = new Integer[96]; //24*4=96
-        Arrays.fill(startingPlanes, 0);
-
-        for (var f : fl) {
-            var heatValue = startingPlanes[f.getTimeslot()];
-            startingPlanes[f.getTimeslot()] = heatValue + 1;
-        }
-        var series = new Series<Integer>();
-        series.setData(startingPlanes);
-        series.setName("# flights");
-        return series;
+    private TimePicker getStartTimeslotPicker() {
+        var tp = new TimePicker();
+        tp.setStep(Duration.ofMinutes(15));
+        tp.setLabel("Start");
+        tp.addValueChangeListener(event ->
+        {
+            hotspot.setStartTimeString(tp.getValue().toString());
+            updateBarChart();
+        });
+        return tp;
     }
 
-    private List<Series<Integer>> getSeriesForHeatmap(List<Flight> fl) {
+    private TimePicker getEndTimeslotPicker() {
+        var tp = new TimePicker();
+        tp.setStep(Duration.ofMinutes(15));
+        tp.setLabel("End");
+        tp.addValueChangeListener(event ->
+        {
+            hotspot.setEndTimeString(tp.getValue().toString());
+            updateBarChart();
+        });
+        return tp;
+    }
 
-        Integer[] heatValueArray = new Integer[96]; //24*4=96
-        Arrays.fill(heatValueArray, 0);
+    private NumberField getNormalCapacity() {
+        var capacity = new NumberField();
+        capacity.setLabel("Capacity");
+        capacity.setMin(0);
+        capacity.setStep(10);
+        capacity.setHasControls(true);
 
-        for (var f : fl) {
-            var heatValue = heatValueArray[f.getTimeslot()];
-            heatValueArray[f.getTimeslot()] = heatValue + 1;
-        }
+        capacity.addValueChangeListener(event ->
+        {
+             hotspot.setNormalCapacity((int) capacity.getValue().longValue());
+            updateBarChart();
+        });
+        return capacity;
+    }
 
+    private NumberField getStressedCapacity() {
+        var stressedCapacity = new NumberField();
+        stressedCapacity.setLabel("Stressed Capacity");
+        stressedCapacity.setMin(0);
+        stressedCapacity.setStep(10);
+        stressedCapacity.setHasControls(true);
+        stressedCapacity.addValueChangeListener(event ->
+        {
+            hotspot.setStressedCapacity((int) stressedCapacity.getValue().longValue());
+            updateBarChart();
+        });
+        return stressedCapacity;
+    }
 
-        var heatValueArray1 = new Series<Integer>();
-        var heatValueArray2 = new Series<Integer>();
-        var heatValueArray3 = new Series<Integer>();
-        var heatValueArray4 = new Series<Integer>();
-        var heatValueArray5 = new Series<Integer>();
-        var heatValueArray6 = new Series<Integer>();
-        var heatValueArray7 = new Series<Integer>();
-        var heatValueArray8 = new Series<Integer>();
+    private Button getAddButton() {
+        Button addButton = new Button("Add");
+        addButton.getStyle().set("position", "relative");
+        addButton.getStyle().set("bottom", "-43%");
+        addButton.getStyle().set("background-color", "#E74C3C");
+        addButton.getStyle().set("color", "white");
+        ArrayList<String> l = new ArrayList<>();
 
+        addButton.addClickListener(e -> {
+            //l.add();
+            grid.setItems(l);
+        });
 
-        heatValueArray1.setData(Utility.getSliceOfArray(heatValueArray, 0, 11));
-        heatValueArray2.setData(Utility.getSliceOfArray(heatValueArray, 12, 23));
-        heatValueArray3.setData(Utility.getSliceOfArray(heatValueArray, 24, 35));
-        heatValueArray4.setData(Utility.getSliceOfArray(heatValueArray, 36, 47));
-        heatValueArray5.setData(Utility.getSliceOfArray(heatValueArray, 48, 59));
-        heatValueArray6.setData(Utility.getSliceOfArray(heatValueArray, 60, 71));
-        heatValueArray7.setData(Utility.getSliceOfArray(heatValueArray, 72, 83));
-        heatValueArray8.setData(Utility.getSliceOfArray(heatValueArray, 84, 96));
-
-        List<Series<Integer>> seriesList = new ArrayList<>();
-        seriesList.add(heatValueArray1);
-        seriesList.add(heatValueArray2);
-        seriesList.add(heatValueArray3);
-        seriesList.add(heatValueArray4);
-        seriesList.add(heatValueArray5);
-        seriesList.add(heatValueArray6);
-        seriesList.add(heatValueArray7);
-        seriesList.add(heatValueArray8);
-
-        return seriesList;
+        return addButton;
     }
 
 
-    private List<String> getLabels() {
-        List<String> labels = new ArrayList<>();
-        for (int i = 0; i < 96; i++) {
-            String h = (i / 4) < 10 ? "0" + (i / 4) : Integer.toString((i / 4));
-            String m = ((i % 4) * 15) == 0 ? "0" + ((i % 4) * 15) : Integer.toString(((i % 4) * 15));
-            String t = h + ":" + m;
-            labels.add(t);
+
+    private void updateBarChart() {
+
+        var newChart = getColumnChart();
+        newChart.setWidthFull();
+        newChart.setSizeFull();
+        chartContainer.replace(columnChart, newChart);
+        columnChart = newChart;
+    }
+
+
+    /***
+     *
+     * @param startStressedPeriodTimeslot as Integer (0-95)
+     * @param endStressedPeriodTimeslot as Integer (0-95)
+     * @param stressedCapacity as Integer
+     * @param normalCapacity as Integer
+     * @param flsp FlightServiceProvider
+     * @return List of Flight Capacity Timeslots (0) Normal (1) Stressed (2) Recovery
+     */
+    private List<Integer[]> getFlightCapacityList(int startStressedPeriodTimeslot,
+                                                  int endStressedPeriodTimeslot,
+                                                  int stressedCapacity,
+                                                  int normalCapacity,
+                                                  FlightServiceProvider flsp) {
+
+
+        Integer[] flightSlots = flsp.getNrOfDeparturesByTimeslot();
+        Integer[] normalFlightSlots;
+        Integer[] stressedFlightSlots = new Integer[flightSlots.length];
+        Integer[] recoveryFlightSlots = new Integer[flightSlots.length];
+        normalFlightSlots = flightSlots.clone();
+
+        List<Integer[]> normalFlightCapacityList = new ArrayList<>();
+        normalFlightCapacityList.add(normalFlightSlots);
+        normalFlightCapacityList.add(stressedFlightSlots);
+        normalFlightCapacityList.add(recoveryFlightSlots);
+
+
+        //start -> draw just normal capacity
+        if (stressedCapacity == 0 || normalCapacity == 0)
+            return normalFlightCapacityList;
+
+        //invalid data --> normal capacity
+        if (startStressedPeriodTimeslot == 0 ||
+                endStressedPeriodTimeslot == 0 ||
+                startStressedPeriodTimeslot > endStressedPeriodTimeslot ||
+                stressedCapacity > normalCapacity) {
+
+            Notification.show("Invalid data").setPosition(Notification.Position.BOTTOM_START);
+            return normalFlightCapacityList;
         }
-        return labels;
+
+
+        int backlog = 0;
+        for (int i = 0; i < flightSlots.length; i++) {
+
+            // STRESSED PERIOD
+            if (i >= startStressedPeriodTimeslot && i <= endStressedPeriodTimeslot) {
+                backlog += flightSlots[i];
+                if (backlog > stressedCapacity) {
+                    stressedFlightSlots[i] = stressedCapacity;
+                    backlog -= stressedCapacity;
+                } else {
+                    stressedFlightSlots[i] = backlog;
+                    backlog = 0;
+                }
+                normalFlightSlots[i] = 0;
+            } else {
+                stressedFlightSlots[i] = 0;
+            }
+
+            //RECOVERY PERIOD
+            if (i > endStressedPeriodTimeslot && backlog > 0) {
+                backlog += flightSlots[i];
+                if (backlog > normalCapacity) {
+                    recoveryFlightSlots[i] = normalCapacity;
+                    backlog -= normalCapacity;
+                } else {
+                    recoveryFlightSlots[i] = backlog;
+                    backlog = 0;
+                }
+                normalFlightSlots[i] = 0;
+            } else {
+                recoveryFlightSlots[i] = 0;
+            }
+        }
+
+        List<Integer[]> list = new ArrayList<>();
+        list.add(normalFlightSlots);
+        list.add(stressedFlightSlots);
+        list.add(recoveryFlightSlots);
+
+        return list;
     }
 }

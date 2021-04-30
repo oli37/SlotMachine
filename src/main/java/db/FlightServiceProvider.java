@@ -29,7 +29,13 @@ public class FlightServiceProvider implements ServiceProvider {
             "LEFT OUTER JOIN slotmachine.city dep_city ON ap_dep.airport_city = dep_city.city_name\n" +
             "LEFT OUTER JOIN slotmachine.city des_city ON ap_des.airport_city = des_city.city_name\n";
 
-    private String postLink = "INSERT INTO slotmachine.cf_flight_attr (cf_name, flight_id) VALUES (?, ?)";
+
+    private String nrOfDeparturesByTimeslot =
+                " SELECT COUNT(*) cnt, to_timestamp(floor((extract('epoch' from slotmachine.flight.departuretime) / 900 )) * 900) \n" +
+                " AT TIME ZONE 'UTC' as interval_alias\n" +
+                " FROM slotmachine.flight GROUP BY interval_alias\n" +
+                " ORDER BY interval_alias";
+
     private CostFunctionServiceProvider cfsp = new CostFunctionServiceProvider();
 
     public FlightServiceProvider() {
@@ -124,6 +130,25 @@ public class FlightServiceProvider implements ServiceProvider {
         return count;
     }
 
+    //TODO: Write proper query for better performance
+    public Integer[] getNrOfDeparturesByTimeslot() {
+        int counter = 0;
+        Integer[] countArray = new Integer[96];
+        try {
+            PreparedStatement pstmt = connection.prepareStatement(nrOfDeparturesByTimeslot);
+            ResultSet rs = pstmt.executeQuery();
+
+            while (rs.next()) {
+                countArray[counter] = rs.getInt(1);
+                counter += 1;
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return countArray;
+    }
+
+
     @Override
     public boolean post(Object element) {
         assert element instanceof Flight;
@@ -191,6 +216,7 @@ public class FlightServiceProvider implements ServiceProvider {
 
     public boolean link(CostFunction cf, Flight f) {
         try {
+            String postLink = "INSERT INTO slotmachine.cf_flight_attr (cf_name, flight_id) VALUES (?, ?)";
             PreparedStatement pstmt = connection.prepareStatement(postLink);
             pstmt.setString(1, cf.getName());
             pstmt.setInt(2, f.getFlightID());

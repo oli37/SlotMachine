@@ -1,6 +1,10 @@
 package db;
 
 
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+
 /**
  * This class is for playing around with DB stuff
  * Do not use it for something else
@@ -8,77 +12,70 @@ package db;
 public class Playground {
 
 
-
     public static void main(String[] args) {
+       var res =  getFlightSeries(2,
+                6,
+                60,
+                100,
+                new FlightServiceProvider());
 
-        FlightServiceProvider flsp = new FlightServiceProvider();
-        //CostFunctionServiceProvider cfsp = new CostFunctionServiceProvider();
-        AirlineServiceProvider alsp = new AirlineServiceProvider();
-        AirportServiceProvider apsp = new AirportServiceProvider();
-        ProposalServiceProvider psp = new ProposalServiceProvider();
+        System.out.println(Arrays.toString(res.get(0)));
+        System.out.println(Arrays.toString(res.get(1)));
+        System.out.println(Arrays.toString(res.get(2)));
+    }
 
-        DbManager dbm = new DbManager();
-        var con = dbm.getConnection();
-        System.out.println(con);
-        System.out.println(con == null);
-        /*for(int i=0; i<96; i++){
-            String h = (i/4)<10 ? "0"+(i/4) : Integer.toString((i/4));
-            String m = ((i%4)*15)==0 ? "0"+((i%4)*15) : Integer.toString(((i%4)*15));
-            String t = h + ":" + m;
-            System.out.println(t);
+    public static List<Integer[]> getFlightSeries(int startStressedPeriodTimeslot,
+                                                        int endStressedPeriodTimeslot,
+                                                        int stressedCapacity,
+                                                        int normalCapacity,
+                                                        FlightServiceProvider flsp) {
+
+
+        Integer[] flightSlots = flsp.getNrOfDeparturesByTimeslot();
+        Integer[] normalFlightSlots;
+        Integer[] stressedFlightSlots = new Integer[flightSlots.length];
+        Integer[] recoveryFlightSlots = new Integer[flightSlots.length];
+        normalFlightSlots = flightSlots.clone();
+
+        int backlog = 0;
+        for (int i = 0; i < flightSlots.length; i++) {
+
+            // STRESSED PERIOD
+            if (i >= startStressedPeriodTimeslot && i <= endStressedPeriodTimeslot) {
+                backlog += flightSlots[i];
+                if (backlog > stressedCapacity) {
+                    stressedFlightSlots[i] = stressedCapacity;
+                    backlog -= stressedCapacity;
+                } else {
+                    stressedFlightSlots[i] = backlog;
+                    backlog = 0;
+                }
+                normalFlightSlots[i] = 0;
+            } else {
+                stressedFlightSlots[i] = 0;
+            }
+
+            //RECOVERY PERIOD
+            if (i > endStressedPeriodTimeslot && backlog > 0) {
+                backlog += flightSlots[i];
+                if (backlog > normalCapacity) {
+                    recoveryFlightSlots[i] = normalCapacity;
+                    backlog -= normalCapacity;
+                } else {
+                    recoveryFlightSlots[i] = backlog;
+                    backlog = 0;
+                }
+                normalFlightSlots[i] = 0;
+            } else {
+                recoveryFlightSlots[i] = 0;
+            }
         }
 
-        CostFunction cf = new CostFunction("TestCF", "AMG", 0, 120, 15, 50);
+        List<Integer[]> list = new ArrayList<>();
+        list.add(normalFlightSlots);
+        list.add(stressedFlightSlots);
+        list.add(recoveryFlightSlots);
 
-        System.out.println(cf);
-        Airport departureAirport = apsp.fetch("AKA");
-        Airport destinationAirport = apsp.fetch("ACC");
-        Airline airline = alsp.fetch("000");
-        OffsetDateTime departureTime = OffsetDateTime.parse("2018-12-12T13:30:30+05:00");
-        OffsetDateTime destinationTime = departureTime.plus(100, ChronoUnit.MINUTES);
-
-
-        Flight flight = new Flight(
-                departureAirport,
-                destinationAirport,
-                airline,
-                departureTime,
-                destinationTime);
-
-        flight.setFlightID(flsp.getFlightID(flight));
-        System.out.println(flight);
-
-        CostFunction cf = new CostFunction();
-        cf.setName("Very Cool");
-        cf.setOwner("000");
-
-        var flights = flsp.fetch(0,5);
-        System.out.println(flights);
-
-
-
-        CostFunction cf = new CostFunction();
-        Proposal p1 = new Proposal();
-        p1.setPrice(50);
-        p1.setDelay(-15);
-        p1.setBid(true);
-
-        Proposal p2 = new Proposal();
-        p2.setPrice(100);
-        p2.setDelay(50);
-        p2.setBid(false);
-
-        cf.setName("Harald2CF");
-        cf.setOwner("AMG");
-        cf.addProposal(p1);
-        cf.addProposal(p2);
-
-        //cfsp.post(cf);
-
-        var ap = apsp.fetch("ABB");
-        System.out.println(ap.toString());
-        var al = alsp.fetch("ACC");
-        System.out.println(al.toString());
-*/
+      return list;
     }
 }
